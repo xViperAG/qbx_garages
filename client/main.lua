@@ -91,11 +91,11 @@ end
 
 function RemoveRadialOptions()
     if MenuItemId1 then
-        exports['qbx-radialmenu']:RemoveOption(MenuItemId1)
+        exports.qbx_radialmenu:RemoveOption(MenuItemId1)
         MenuItemId1 = nil
     end
     if MenuItemId2 then
-        exports['qbx-radialmenu']:RemoveOption(MenuItemId2)
+        exports.qbx_radialmenu:RemoveOption(MenuItemId2)
         MenuItemId2 = nil
     end
 end
@@ -374,7 +374,7 @@ local function AddRadialParkingOption()
     local veh, dist = GetClosestVehicle()
     if (veh and dist <= Config.VehicleParkDistance and Config.AllowParkingFromOutsideVehicle) or IsPedInAnyVehicle(cache.ped, false) then
 	if MenuItemId1 then return end
-        MenuItemId1 = exports['qbx-radialmenu']:AddOption({
+        MenuItemId1 = exports.qbx_radialmenu:AddOption({
             id = 'put_up_vehicle',
             title = 'Park Vehicle',
             icon = 'square-parking',
@@ -385,7 +385,7 @@ local function AddRadialParkingOption()
     end
 	if not IsPedInAnyVehicle(cache.ped, false) then
 		if MenuItemId2 then return end
-		MenuItemId2 = exports['qbx-radialmenu']:AddOption({
+		MenuItemId2 = exports.qbx_radialmenu:AddOption({
 			id = 'open_garage_menu',
 			title = 'Open Garage',
 			icon = 'warehouse',
@@ -398,7 +398,7 @@ end
 
 local function AddRadialImpoundOption()
 	if MenuItemId1 then return end
-	MenuItemId1 = exports['qbx-radialmenu']:AddOption({
+	MenuItemId1 = exports.qbx_radialmenu:AddOption({
         id = 'open_garage_menu',
         title = 'Open Impound Lot',
         icon = 'warehouse',
