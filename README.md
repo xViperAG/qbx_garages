@@ -1,7 +1,7 @@
 # qbx-garages
 
 
-**ATENTION: THIS SCRIPT USES THE LATEST VERSION OF THE [RADIALMENU](https://github.com/Qbox-project/qbx-radialmenu) AND [QBX-CORE](https://github.com/Qbox-project/qbx-core)**
+**ATTENTION: THIS SCRIPT USES THE LATEST VERSION OF THE [RADIALMENU](https://github.com/Qbox-project/qbx_radialmenu) AND [QBX-CORE](https://github.com/Qbox-project/qbx_core)**
 
 This is a qb-garages script that uses the radialmenu to retrieve and park vehicles.
 Almost everything is fully customizable to the last bit!
@@ -9,15 +9,15 @@ Almost everything is fully customizable to the last bit!
 **For screenshots scroll down**
 
 ## Dependencies
- - [qbx-radialmenu](https://github.com/Qbox-project/qbx-radialmenu)
- - [qbx-core](https://github.com/Qbox-project/qbx-core)
+ - [qbx_radialmenu](https://github.com/Qbox-project/qbx_radialmenu)
+ - [qbx_core](https://github.com/Qbox-project/qbx_core)
 
 ## Installation
 
-Drag 'n Drop replace for qbx-garages.
+Drag 'n Drop replace for qbx_garages.
 
-- Delete qbx-garages.
-- Drag the downloaded qbx-garages folder into the [qbx] folder.
+- Delete qbx_garages.
+- Drag the downloaded qbx_garages folder into the [qbx] folder.
 - If you want to use the latest features, apply patch1.sql to your DB
 
 ## Features
@@ -31,6 +31,7 @@ Drag 'n Drop replace for qbx-garages.
 * Custom DrawText
 * Water Garages
 * Aircraft Garages
+* Added Fake Plate Check
 
 ## Screenshots
 
@@ -94,26 +95,27 @@ Everything that says optional can be omitted.
 ### parking vehicle using target
 ```
 local garageName = 'pdgarage'
-    exports['qb-target']:AddBoxZone(garageName, vector3(469.51, -992.35, 26.27), 0.2, 0.2, {
-        name = garageName,
-        debugPoly = true,
-        minZ = 26.80,
-        maxZ = 27.10,
-    }, {
+    exports.ox_target:addBoxZone({
+        name = garageName
+        coords = vector3(469.51, -992.35, 26.27),
+        size = vec3(0.2, 0.2, 1.5),
+        rotation = 0,
+        debug = true,
         options = {
             {
-                type = "client",
-                action = function ()
-                    TriggerEvent('qb-garages:client:ParkLastVehicle', garageName)
-                end,
                 icon = 'parking',
                 label = 'Park Vehicle',
+                onSelect = function()
+                    TriggerEvent('qb-garages:client:ParkLastVehicle', garageName)
+                end,
+                canInteract = function(_, distance)
+                    return distance <= 2.5
+                end
             },
         },
-        distance = 3
     })
 ```
-### improved phone tracking (DEPRECATED)
+### New Phone Tracking Using Export
 Replace:
 
 ```
@@ -134,16 +136,35 @@ With:
 RegisterNUICallback('track-vehicle', function(data, cb)
     local veh = data.veh
     if veh.state == 'In' then
-        if veh.parkingspot then
-            SetNewWaypoint(veh.parkingspot.x, veh.parkingspot.y)
-            QBCore.Functions.Notify("Your vehicle has been marked", "success")
-        end
-    elseif veh.state == 'Out' and findVehFromPlateAndLocate(veh.plate) then
-        QBCore.Functions.Notify("Your vehicle has been marked", "success")
+        exports['qb-garages']:TrackVehicleByPlate(veh.plate)
+        TriggerEvent('qb-phone:client:CustomNotification',
+            "GARAGE",
+            "GPS Marker Set!",
+            "fas fa-car",
+            "#e84118",
+            5000
+        )
+        cb("ok")
+    elseif veh.state == 'Out' then
+        exports['qb-garages']:TrackVehicleByPlate(veh.plate)
+        TriggerEvent('qb-phone:client:CustomNotification',
+            "GARAGE",
+            "GPS Marker Set!",
+            "fas fa-car",
+            "#e84118",
+            5000
+        )
+        cb("ok")
     else
-        QBCore.Functions.Notify("This vehicle cannot be located", "error")
+        TriggerEvent('qb-phone:client:CustomNotification',
+            "GARAGE",
+            "This vehicle cannot be located",
+            "fas fa-car",
+            "#e84118",
+            5000
+        )
+        cb("ok")
     end
-    cb("ok")
 end)
 ```
 
@@ -158,22 +179,3 @@ end)
 ## Support
 
 Join my Discord server: https://discord.gg/pqcug3XSQx
-
-# License
-
-    QBCore Framework
-    Copyright (C) 2021 Joshua Eger
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>
-
