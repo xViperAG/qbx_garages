@@ -1,3 +1,6 @@
+--- @todo Move locales to lib.locale()
+lib.locale()
+
 Config = Config or {}
 --[[
     Author: JDev17#8160
@@ -58,48 +61,41 @@ Config = Config or {}
 -- There is a new clientside export called 'TrackVehicleByPlate' that can be used to track vehicles by plate, this is useful for other scripts that want to track vehicles by plate (e.g. exports['qb-garages']:TrackVehicleByPlate(plate))
 -- And the clientside event 'qb-garages:client:TrackVehicleByPlate'(e.g. TriggerEvent('qb-garages:client:TrackVehicleByPlate', plate))
 
-Config.TrackVehicleByPlateCommand = true -- Allow players to track their vehicles by plate using /trackvehicle <plate>
+Config.TrackVehicleByPlateCommand = 'trackvehicle'
+Config.EnableTrackVehicleByPlateCommand = true -- Allow players to track their vehicles by plate using /trackvehicle <plate>
 Config.TrackVehicleByPlateCommandPermissionLevel = 'god' -- Permission level required to use /trackvehicle <plate>, false for anyone / everyone
 
 -- NEW --
 
-
-
 -- NEW --
-Config.SharedGangGarages = false -- Allow shared gang garages, if false, the player can only access their own vehicles
--- for specific gangs, use this:
--- Config.SharedGangGarages = {
---     ['vagos'] = true, -- Allow shared gang garages, if false, the player can only access their own vehicles
---     ['gsf'] = true, -- Allow shared gang garages, if false, the player can only access their own vehicles
--- }
--- NEW ---
+Config.BrazzersFakeplate = true -- Toggle this to true if using Brazzers Fakeplate Script
+-- NEW --
 
 Config.SharedHouseGarage = true -- Allow shared house garages, if false, the player can only access their own vehicles
+--Config.SharedGangGarages = false -- Allow shared gang garages, if false, the player can only access their own vehicles
+-- for specific gangs, use this:
+Config.SharedGangGarages = {
+    ['vagos'] = true, -- Allow shared gang garages, if false, the player can only access their own vehicles
+    ['gsf'] = true, -- Allow shared gang garages, if false, the player can only access their own vehicles
+}
 
--- NEW ---
+Config.SpawnWithEngineRunning = true
 Config.AllowParkingAnyonesVehicle = false -- Allow anyones vehicle to be stored in the garage, if false, only vehicles you own can be stored in the garage (supports only public garages)
 Config.AllowParkingFromOutsideVehicle = true -- Allow parking from outside the vehicle, if false, you have to be inside the vehicle to park it
 Config.VehicleParkDistance = 2.0 -- Distance from the player to the vehicle to park it, radial option will dissapear beyond this distance
--- NEW -
 
 Config.GlobalParking = false -- if true, you can access your cars from any garage, if false, you can only access your cars from the garage you stored them in
--- NEW
-
--- NEW
 Config.SpawnVehiclesServerside = true -- REQUIRES THE ABSOLUTE LATEST VERSION OF QBCORE, OR MAKE SURE YOU HAVE THESE: https://github.com/qbcore-framework/qb-core/blob/81ffd872319d2eb8e496c3b3faaf37e791912c84/server/events.lua#L252
--- NEW 
+-- Only relevant if AllowSpawningFromAnywhere = false
+Config.SpawnAtFreeParkingSpot = true -- Will spawn at the closest free parking spot if you walk up to a occupied parking spot (basically you have to walk up close to a parking lot but it does not matter if there is a vehicle blocking the spawn as it will spawn at the closest free parking spot)
 
--- NEW -- Only relevant if AllowSpawningFromAnywhere = false
-Config.SpawnAtFreeParkingSpot = false -- Will spawn at the closest free parking spot if you walk up to a occupied parking spot (basically you have to walk up close to a parking lot but it does not matter if there is a vehicle blocking the spawn as it will spawn at the closest free parking spot)
-
--- DEPRECATED - will be removed in the future
-Config.StoreDamageAccuratly = false -- Do not use, if on latest qb-core, if set to true, make sure to apply / run patch1.sql
--- DEPRECATED - will be removed in the future
-
-Config.StoreParkinglotAccuratly = false  -- store the last parking lot in the DB, if set to true, make sure to apply / run patch1.sql, I recommend applying the tracking snippet for qb-phone from the ReadMe to the phone so you can track the vehicle to the exact parking lot
+Config.StoreParkinglotAccuratly = true  -- store the last parking lot in the DB, if set to true, make sure to apply / run patch1.sql, I recommend applying the tracking snippet for qb-phone from the ReadMe to the phone so you can track the vehicle to the exact parking lot
 Config.SpawnAtLastParkinglot = false -- spawn the vehicle at the last parked location if StoreParkinglotAccuratly = true, if set to true, make sure to apply / run patch1.sql
 Config.GarageNameAsBlipName = true -- if set to true, the blips name will match the garage name
-Config.FuelScript = false -- change to lj-fuel / ps-fuel if you use lj-fuel / ps-fuel or something else if you use any other LegcyFuel compatible script
+
+-- Change the below to the following options: Renewed-Fuel / cdn-fuel / LegacyFuel / ps-fuel / lj-fuel or leave blank for ox_fuel
+Config.FuelScript = 'Renewed-Fuel'
+
 Config.AllowSpawningFromAnywhere = true -- if set to true, the car can be spawned from anywhere inside the zone on the closest parking lot, if set to false you will have to walk up to a parking lot 
 Config.AutoRespawn = true --True == auto respawn cars that are outside into your garage on script restart, false == does not put them into your garage and players have to go to the impound
 Config.WarpPlayerIntoVehicle = false -- True == Will Warp Player Into their vehicle after pulling it out of garage. False It will spawn on the parking lot / in front of them  (Global, can be overriden by each garage)
@@ -107,73 +103,97 @@ Config.HouseParkingDrawText = 'Parking' -- text when driving on to the HOUSE par
 Config.ParkingDistance = 2.0 -- Distance to the parking lot when trying to park the vehicle  (Global, can be overriden by each garage)
 Config.SpawnDistance = 4.5 -- The maximum distance you can be from a parking spot, to spawn a car (Global, can be overriden by each garage)
 Config.DepotPrice = 60.0 -- The price to take out a despawned vehicle from impound.
-Config.DrawTextPosition = 'left-center' -- location of drawtext: left-center, top-center, right-center (-center isn't obligatory)
+Config.DrawTextPosition = 'left-center' -- location of drawtext: left, top, right
 
+--[[ 
+    Job Vehicles Configuration
+    Every job-specific garage is identified by a unique jobGarageIdentifier.
+    
+    For each garage:
+    - `label` provides a descriptive name for the garage.
+    - `vehicles` is a grade-based list of vehicles available for that grade.
+    For each vehicle:
+    - `model` is the internal name of the vehicle.
+    - `label` is the display name for the vehicle.
+    - `configName` (optional) is a unique configuration identifier.
+    - `job` (optional) restricts the vehicle to a specific job if multiple have access to this garage. If omitted, it's available for all jobs that have access to this sepecific garage.
+    - with multi job restriction:  {"police", "swat"} --> If, for instance, 'ambulance' had access to this garage too, they wouldn't see this vehicle, only police and swat (in this example). 
+    ---- NOTE: If you want the same vehicle with different liveries, create two entries with distinct configurations.    
 
--- set useVehicleSpawner = true for each garage that has type job and should use the vehicle spawner instead of personal vehicles
+    -- set useVehicleSpawner = true for each garage that has type job and should use the vehicle spawner instead of personal vehicles
+]]
+
 Config.JobVehicles = {
-	['pd1'] = { -- jobGarageIdentifier
+    ['pd1'] = { -- jobGarageIdentifier
         label = "Police Vehicles",
         job = 'police',
         -- Grade 0
+
+        -- !! IMPORTANT !! - READ THIS
+        -- you can either define the configName, model and label like this and use the vehicle settings below to define extras and liveries for your vehicles
+        -- this way you can define a single config and can reuse it for any vehicle you want or you can just use the old way without configuring extras and liveries
+
+        vehicles = {
+            [0] = {},
+            [1] = {
+                -- [1] = { label = "Some Vehicle", model = "yourmodel", job = {"police", "ambulance"} }, -- example
+                -- [2] = { label = "Another Vehicle", model = "anothermodel", configName = "myUniqueNameForThisCarConfiguration3", job = {"police", "swat"} },
+            },
+        }
+    },
+    ['pdhelicopter'] = {
+        label = 'Police Helicopters',
+        job = 'police',
         vehicles = {
             [0] = {
-                ["police"] = "Police Car 1",
-                ["police2"] = "Police Car 2",
-                ["police3"] = "Police Car 3",
-                ["police4"] = "Police Car 4",
-                ["policeb"] = "Police Car 5",
-                ["policet"] = "Police Car 6",
-                ["sheriff"] = "Sheriff Car 1",
-                ["sheriff2"] = "Sheriff Car 2",
+                ["as350"] = "Police AS350"
             },
-            -- Grade 1
             [1] = {
-                ["police"] = "Police Car 1",
-                ["police2"] = "Police Car 2",
-                ["police3"] = "Police Car 3",
-                ["police4"] = "Police Car 4",
-                ["policeb"] = "Police Car 5",
-                ["policet"] = "Police Car 6",
-                ["sheriff"] = "Sheriff Car 1",
-                ["sheriff2"] = "Sheriff Car 2",
-
+                ["as350"] = "Police AS350"
             },
-            -- Grade 2
             [2] = {
-                ["police"] = "Police Car 1",
-                ["police2"] = "Police Car 2",
-                ["police3"] = "Police Car 3",
-                ["police4"] = "Police Car 4",
-                ["policeb"] = "Police Car 5",
-                ["policet"] = "Police Car 6",
-                ["sheriff"] = "Sheriff Car 1",
-                ["sheriff2"] = "Sheriff Car 2",
+                ["as350"] = "Police AS350"
             },
-            -- Grade 3
             [3] = {
-                ["police"] = "Police Car 1",
-                ["police2"] = "Police Car 2",
-                ["police3"] = "Police Car 3",
-                ["police4"] = "Police Car 4",
-                ["policeb"] = "Police Car 5",
-                ["policet"] = "Police Car 6",
-                ["sheriff"] = "Sheriff Car 1",
-                ["sheriff2"] = "Sheriff Car 2",
+                ["as350"] = "Police AS350"
             },
-            -- Grade 4
             [4] = {
-                ["police"] = "Police Car 1",
-                ["police2"] = "Police Car 2",
-                ["police3"] = "Police Car 3",
-                ["police4"] = "Police Car 4",
-                ["policeb"] = "Police Car 5",
-                ["policet"] = "Police Car 6",
-                ["sheriff"] = "Sheriff Car 1",
-                ["sheriff2"] = "Sheriff Car 2",
-            }
+                ["as350"] = "Police AS350"
+            },
+            [5] = {
+                ["as350"] = "Police AS350"
+            },
+            [6] = {
+                ["as350"] = "Police AS350"
+            },
+            [7] = {
+                ["as350"] = "Police AS350"
+            },
         }
     }
+}
+
+Config.VehicleSettings = {
+    ['myUniqueNameForThisCarConfiguration'] = { -- configName
+        -- ['model'] = 'police2', -- You can either define the model and grades here, or use the configName in the jobVehicles config
+        -- ['jobGrades'] = {0},
+        ["livery"] = 1,
+        ["extras"] = {
+            ["1"] = true, -- on/off
+            ["2"] = true,
+            ["3"] = true,
+            ["4"] = true,
+            ["5"] = true,
+            ["6"] = true,
+            ["7"] = true,
+            ["8"] = true,
+            ["9"] = true,
+            ["10"] = true,
+            ["11"] = true,
+            ["12"] = true,
+            ["13"] = true,
+        },
+    },
 }
 
 -- '/restorelostcars <destination_garage>' allows you to restore cars that have been parked in garages which no longer exist in the config (garage renamed or removed). The restored cars get sent to the destination garage or if left empty to a random garage in the list.
@@ -200,7 +220,7 @@ Config.VehicleCategories = {
 Config.HouseGarageCategories = {'car', 'motorcycle', 'other'} -- Which categories are allowed to be parked at a house garage
 
 
-Config.VehicleHeading = 'hood' -- only used when NO parking spots are defined in the garage config
+Config.VehicleHeading = 'driverside' -- only used when NO parking spots are defined in the garage config
 --[[^^^^^^^^
     'forward' = will face the sameway as the ped
     'driverside' = will put the driver door closets to the ped
@@ -209,7 +229,7 @@ Config.VehicleHeading = 'hood' -- only used when NO parking spots are defined in
 ]]
 
 Config.SharedJobGarages = { -- define the job garages which are shared
-    --'pdgarage',
+    'pdgarage',
 }
 
 Config.Garages = {
