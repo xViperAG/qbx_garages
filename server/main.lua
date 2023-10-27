@@ -303,7 +303,7 @@ lib.callback.register("qb-garage:server:GetVehicleProperties", function(source, 
 end)
 
 RegisterNetEvent('qb-garage:server:updateVehicle', function(state, fuel, engine, body, properties, plate, garage, location, damage)
-    local hasFakePlate = Config.BrazzersFakeplate and exports['brazers-fakeplates']:getPlateFromFakePlate(plate)
+    local hasFakePlate = Config.BrazzersFakeplate and exports['brazzers-fakeplates']:getPlateFromFakePlate(plate)
     if hasFakePlate then plate = hasFakePlate end
     Wait(100)
     if location and type(location) == 'vector3' then
