@@ -69,6 +69,7 @@ Config.TrackVehicleByPlateCommandPermissionLevel = 'god' -- Permission level req
 
 -- NEW --
 Config.BrazzersFakeplate = true -- Toggle this to true if using Brazzers Fakeplate Script
+Config.RenewedKeys = true -- Toggle this to true if using Renewed-Vehiclekeys
 -- NEW --
 
 Config.SharedHouseGarage = true -- Allow shared house garages, if false, the player can only access their own vehicles

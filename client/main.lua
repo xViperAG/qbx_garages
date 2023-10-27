@@ -608,7 +608,6 @@ local function UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleC
     else
         Entity(veh).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
     end
-    TriggerEvent("vehiclekeys:client:SetOwner", plate)
     TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
 
     ClearMenu()
@@ -653,7 +652,6 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage, prop
         else
             Entity(spawnedVehicle).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
-        TriggerEvent("vehiclekeys:client:SetOwner", plate)
         TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
     else
         if plate then
@@ -670,6 +668,7 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage, prop
         SetAsMissionEntity(spawnedVehicle)
         ApplyVehicleDamage(spawnedVehicle, vehicleInfo)
         TriggerServerEvent('qb-garage:server:updateVehicleState', 0, vehicleInfo.plate, vehicleInfo.garage)
+        TriggerEvent("vehiclekeys:client:SetOwner", plate) -- There is really no other way to do this one since it's cliented...
     end
     SetEntityHeading(spawnedVehicle, heading)
     SetAsMissionEntity(spawnedVehicle)
