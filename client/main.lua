@@ -780,15 +780,10 @@ RegisterNetEvent('qb-garages:client:TakeOutGarage', function(data, cb)
     else
         local netId, properties = lib.callback.await('qb-garage:server:spawnvehicle', false, vehicle, location, garage.WarpPlayerIntoVehicle or Config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
         Wait(100)
-            local veh = NetToVeh(netId)
-            local veh = NetToVeh(netId)
-            if not veh or not netId then
-                print("ISSUE HERE: ", netId)
-            end
         local veh = NetToVeh(netId)
-            if not veh or not netId then
-                print("ISSUE HERE: ", netId)
-            end
+        if not veh or not netId then
+            print("ISSUE HERE: ", netId)
+        end
         UpdateSpawnedVehicle(veh, vehicle, heading, garage, properties)
         if cb then cb(veh) end
     end
