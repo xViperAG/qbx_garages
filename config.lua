@@ -1,5 +1,5 @@
 --- @todo Move locales to lib.locale()
-lib.locale()
+-- lib.locale()
 
 Config = Config or {}
 --[[
