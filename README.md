@@ -1,4 +1,4 @@
-# qbx-garages
+# qbx_garages
 
 
 **ATTENTION: THIS SCRIPT USES THE LATEST VERSION OF THE [RADIALMENU](https://github.com/Qbox-project/qbx_radialmenu) AND [QBX-CORE](https://github.com/Qbox-project/qbx_core)**
@@ -35,13 +35,7 @@ Drag 'n Drop replace for qbx_garages.
 
 ## Screenshots
 
-![image](https://user-images.githubusercontent.com/25738474/161191185-5bfa6805-1e89-44ef-902a-11f60ed68ea8.png)
-
-![image](https://user-images.githubusercontent.com/25738474/161191275-2ca930fe-5583-4caa-a159-0c239b404abe.png)
-
-![image](https://user-images.githubusercontent.com/25738474/161191330-9270f95d-182f-4709-988a-ef13f0723ba5.png)
-
-![image](https://user-images.githubusercontent.com/25738474/161191354-057ca8d9-ee6d-4f92-8dd7-657d3bf26274.png)
+( Note: Add New Images )
 
 ## Config Example
 
@@ -175,7 +169,10 @@ end)
 * [bamablood94](https://github.com/bamablood94) - I used part of his qb-garages script.
 * [QBCore Devs](https://github.com/qbcore-framework/) - For making an awesome framework and enabling me to do this.
 * QBCore Community - Thank you so much for everyone who's been testing this!
+* [JDev](https://github.com/JonasDev17) - Maintaining the resource and handing the reigns to me
 
-## Support
-
-Join my Discord server: https://discord.gg/pqcug3XSQx
+# Issues, Suggestions & Support
+* This resource is still in development. All help with improving the resource is encouraged and appreciated
+* Please use the [GitHub](https://github.com/xViperAG) issues system to report issues or make suggestions
+* When making suggestions, please keep `[Suggestion]` in the title to make it clear that it is a suggestion, or join the Discord
+* Discord: https://discord.gg/3CXrkvQVds
