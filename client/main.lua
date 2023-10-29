@@ -557,7 +557,7 @@ local function GetSpawnLocationAndHeading(garage, garageType, parkingSpots, vehi
             if Config.AllowSpawningFromAnywhere then
                 location = GetFreeSingleParkingSpot(freeParkingSpots, vehicle)
                 if location == nil then
-                    qxports.qbx_core:Notify(Lang:t("error.all_occupied"), "error", 4500)
+                    exports.qbx_core:Notify(Lang:t("error.all_occupied"), "error", 4500)
                 return end
                 heading = location.w
             else
@@ -812,7 +812,7 @@ RegisterNetEvent('qb-garages:client:ParkVehicle', function()
             curVeh = closestVeh
 		end
 	else
-		canPark = GetPedInVehicleSeat(curVeh, -1) == ped
+		canPark = GetPedInVehicleSeat(curVeh, -1) == cache.ped
     end
     Wait(200)
     if not curVeh or not DoesEntityExist(curVeh) then return end
