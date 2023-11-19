@@ -85,7 +85,7 @@ RegisterNetEvent("qb-garage:server:UpdateSpawnedVehicle", function(plate, value)
     if Config.RenewedKeys then
         exports['Renewed-Vehiclekeys']:addKey(source, GetPlate(plate))
     else
-        exports.qbx_vehiclekeys:AddKeys(source, plate)
+        exports.qbx_vehiclekeys:GiveKeys(source, plate)
     end
 end)
 
@@ -113,14 +113,14 @@ lib.callback.register('qb-garage:server:spawnvehicle', function(source, vehInfo,
         if Config.RenewedKeys then
             exports['Renewed-Vehiclekeys']:addKey(source, GetPlate(hasFakePlate))
         else
-            exports.qbx_vehiclekeys:AddKeys(source, hasFakePlate)
+            exports.qbx_vehiclekeys:GiveKeys(source, hasFakePlate)
         end
     else 
         SetVehicleNumberPlateText(veh, plate)
         if Config.RenewedKeys then
             exports['Renewed-Vehiclekeys']:addKey(source, GetPlate(plate))
         else
-            exports.qbx_vehiclekeys:AddKeys(source, plate)
+            exports.qbx_vehiclekeys:GiveKeys(source, plate)
         end
     end
 
