@@ -83,9 +83,9 @@ RegisterNetEvent("qb-garage:server:UpdateSpawnedVehicle", function(plate, value)
     VehicleSpawnerVehicles[plate] = value
 
     if Config.RenewedKeys then
-        exports['Renewed-Vehiclekeys']:addKey(source, plate)
+        exports['Renewed-Vehiclekeys']:addKey(source, GetPlate(plate))
     else
-        TriggerClientEvent("vehiclekeys:client:SetOwner", source, plate)
+        exports.qbx_vehiclekeys:AddKeys(source, plate)
     end
 end)
 
@@ -111,16 +111,16 @@ lib.callback.register('qb-garage:server:spawnvehicle', function(source, vehInfo,
     if hasFakePlate then 
         SetVehicleNumberPlateText(veh, hasFakePlate)
         if Config.RenewedKeys then
-            exports['Renewed-Vehiclekeys']:addKey(source, hasFakePlate)
+            exports['Renewed-Vehiclekeys']:addKey(source, GetPlate(hasFakePlate))
         else
-            TriggerClientEvent("vehiclekeys:client:SetOwner", source, hasFakePlate)
+            exports.qbx_vehiclekeys:AddKeys(source, hasFakePlate)
         end
     else 
         SetVehicleNumberPlateText(veh, plate)
         if Config.RenewedKeys then
-            exports['Renewed-Vehiclekeys']:addKey(source, plate)
+            exports['Renewed-Vehiclekeys']:addKey(source, GetPlate(plate))
         else
-            TriggerClientEvent("vehiclekeys:client:SetOwner", source, plate)
+            exports.qbx_vehiclekeys:AddKeys(source, plate)
         end
     end
 
@@ -373,7 +373,7 @@ RegisterNetEvent('qb-garages:server:parkVehicle', function(plate)
     if vehicle then
         DeleteEntity(vehicle)
         if Config.RenewedKeys then
-            exports['Renewed-Vehiclekeys']:removeKey(source, plate)
+            exports['Renewed-Vehiclekeys']:removeKey(source, GetPlate(plate))
         end
     end
 end)
