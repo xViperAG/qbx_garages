@@ -95,16 +95,16 @@ lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(s
 end)
 
 lib.callback.register('qb-garage:server:spawnvehicle', function(source, vehInfo, coords, warp)
-    local netId = SpawnVehicle(source, vehInfo.vehicle, coords, warp)
+    local vehProps = {}
+    local plate = vehInfo.plate
+    local result = MySQL.query.await('SELECT mods FROM player_vehicles WHERE plate = ?', {plate})
+    if result[1] then vehProps = json.decode(result[1].mods) end
+    local netId = SpawnVehicle(source, vehInfo.vehicle, coords, warp, vehProps)
     local veh = NetworkGetEntityFromNetworkId(netId)
     if not veh or not NetworkGetNetworkIdFromEntity(veh) then
         print('Server:90 | ISSUE HERE', veh, NetworkGetNetworkIdFromEntity(veh))
     end
-    local vehProps = {}
-    local plate = vehInfo.plate
     local hasFakePlate = Config.BrazzersFakeplate and exports['brazzers-fakeplates']:getFakePlateFromPlate(plate)
-    local result = MySQL.query.await('SELECT mods FROM player_vehicles WHERE plate = ?', {plate})
-    if result[1] then vehProps = json.decode(result[1].mods) end
     local netId = NetworkGetNetworkIdFromEntity(veh)
     OutsideVehicles[plate] = {netID = netId, entity = veh}
 

@@ -639,7 +639,7 @@ local function SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location,
     UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleConfig, cb)
 end
 
-function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage, properties)
+function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
     local plate = GetPlate(spawnedVehicle)
     if garage.useVehicleSpawner then
         ClearMenu()
@@ -663,8 +663,6 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage, prop
         else
             Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
-        lib.setVehicleProperties(spawnedVehicle, properties or {})
-        SetVehicleNumberPlateText(spawnedVehicle, vehicleInfo.plate)
         SetAsMissionEntity(spawnedVehicle)
         ApplyVehicleDamage(spawnedVehicle, vehicleInfo)
         TriggerServerEvent('qb-garage:server:updateVehicleState', 0, vehicleInfo.plate, vehicleInfo.garage)
@@ -778,13 +776,13 @@ RegisterNetEvent('qb-garages:client:TakeOutGarage', function(data, cb)
     if garage.useVehicleSpawner then
         SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
     else
-        local netId, properties = lib.callback.await('qb-garage:server:spawnvehicle', false, vehicle, location, garage.WarpPlayerIntoVehicle or Config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
+        local netId = lib.callback.await('qb-garage:server:spawnvehicle', false, vehicle, location, garage.WarpPlayerIntoVehicle or Config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
         Wait(100)
         local veh = NetToVeh(netId)
         if not veh or not netId then
             print("ISSUE HERE: ", netId)
         end
-        UpdateSpawnedVehicle(veh, vehicle, heading, garage, properties)
+        UpdateSpawnedVehicle(veh, vehicle, heading, garage)
         if cb then cb(veh) end
     end
 end)
