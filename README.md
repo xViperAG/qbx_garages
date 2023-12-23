@@ -20,6 +20,10 @@ Drag 'n Drop replace for qbx_garages.
 - Drag the downloaded qbx_garages folder into the [qbx] folder.
 - If you want to use the latest features, apply patch1.sql to your DB
 
+## IMPORTANT CHANGE!!!
+
+- Please change '@qbx_garages/config.lua' to '@qbx_garages/config/shared.lua' or use the respective local Garages = require '@qbx_garages.config.shared'.Garages and local HouseGarages = require '@qbx_garages.config.shared'.HouseGarages
+
 ## Features
 
 * Public Garages
@@ -109,6 +113,7 @@ local garageName = 'pdgarage'
         },
     })
 ```
+
 ### New Phone Tracking Using Export
 Replace:
 
