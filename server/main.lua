@@ -4,7 +4,8 @@ local OutsideVehicles = {}
 local VehicleSpawnerVehicles = {}
 
 local svConfig = require 'config.server'
-local shConfig = require 'config.shared'
+local Garages = require 'config.shared'.Garages
+local HouseGarages = require 'config.shared'.HouseGarages
 
 local function TableContains (tab, val)
     if type(val) == "table" then
@@ -55,7 +56,7 @@ lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, p
     end
 
     local garageName = veh and veh.garage
-    local garage = shConfig.Garages[garageName]
+    local garage = Garages[garageName]
 
     if garage then
         if garage.blipcoords then
@@ -404,10 +405,10 @@ lib.callback.register('qb-garage:server:GetPlayerVehicles', function(source)
                 if not VehicleData then goto continue end
                 local VehicleGarage = locale("no_garage")
                 if v.garage ~= nil then
-                    if shConfig.Garages[v.garage] ~= nil then
-                        VehicleGarage = shConfig.Garages[v.garage].label
-                    elseif shConfig.HouseGarages[v.garage] then
-                        VehicleGarage = shConfig.HouseGarages[v.garage].label
+                    if Garages[v.garage] ~= nil then
+                        VehicleGarage = Garages[v.garage].label
+                    elseif HouseGarages[v.garage] then
+                        VehicleGarage = HouseGarages[v.garage].label
                     end
                 end
 
@@ -449,7 +450,7 @@ lib.callback.register('qb-garage:server:GetPlayerVehicles', function(source)
 end)
 
 local function GetRandomPublicGarage()
-    for garageName, garage in pairs(shConfig.Garages)do
+    for garageName, garage in pairs(Garages)do
         if garage.type == 'public' then
             return garageName -- return the first garageName
         end
@@ -466,9 +467,9 @@ lib.addCommand("restorelostcars", {
     restricted = svConfig.RestoreCommandPermissionLevel
 }, function(source, args)
     local src = source
-    if next(shConfig.Garages) ~= nil then
+    if next(Garages) ~= nil then
         local destinationGarage = args.destination_garage and args.destination_garage or GetRandomPublicGarage()
-        if shConfig.Garages[destinationGarage] == nil then
+        if Garages[destinationGarage] == nil then
             exports.qbx_core:Notify(src, 'Invalid garage name provided', 'error', 4500)
             return
         end
@@ -477,7 +478,7 @@ lib.addCommand("restorelostcars", {
         MySQL.query('SELECT garage FROM player_vehicles', function(result)
             if result[1] then
                 for _,v in ipairs(result) do
-                    if shConfig.Garages[v.garage] == nil then
+                    if Garages[v.garage] == nil then
                         if v.garage then
                             invalidGarages[v.garage] = true
                         end

@@ -17,6 +17,7 @@
 ]]
 
 return {
+    StoreParkinglotAccuratly = true,  -- store the last parking lot in the DB, if set to true, make sure to apply / run patch1.sql, I recommend applying the tracking snippet for qb-phone from the ReadMe to the phone so you can track the vehicle to the exact parking lot
     SpawnWithEngineRunning = true,
     AllowParkingFromOutsideVehicle = true, -- Allow parking from outside the vehicle, if false, you have to be inside the vehicle to park it
     VehicleParkDistance = 2.0, -- Distance from the player to the vehicle to park it, radial option will dissapear beyond this distance

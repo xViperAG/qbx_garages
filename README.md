@@ -22,7 +22,11 @@ Drag 'n Drop replace for qbx_garages.
 
 ## IMPORTANT CHANGE!!!
 
-- Please change '@qbx_garages/config.lua' to '@qbx_garages/config/shared.lua' or use the respective local Garages = require '@qbx_garages.config.shared'.Garages and local HouseGarages = require '@qbx_garages.config.shared'.HouseGarages
+- Remove `@qbx_garages/config.lua` and add the respective `local Garages = require '@qbx_garages.config.shared'.Garages` and `local HouseGarages = require '@qbx_garages.config.shared'.HouseGarages` to whichever client or server script you are needing.
+
+**OR**
+
+- Change `@qbx_garages/config.lua` to `@qbx_garages/compat/shared.lua` in the fxmanifest.lua
 
 ## Features
 
