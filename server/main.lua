@@ -10,16 +10,12 @@ local HouseGarages = require 'config.shared'.HouseGarages
 local function TableContains (tab, val)
     if type(val) == "table" then
         for _, value in ipairs(tab) do
-            if TableContains(val, value) then
-                return true
-            end
+            if TableContains(val, value) then return true end
         end
         return false
     else
         for _, value in ipairs(tab) do
-            if value == val then
-                return true
-            end
+            if value == val then return true end
         end
     end
     return false
@@ -29,22 +25,15 @@ end
 lib.callback.register("qb-garage:server:GetOutsideVehicle", function(source, plate)
     local pData = exports.qbx_core:GetPlayer(source)
     if not OutsideVehicles[plate] then return nil end
-    MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = ? and plate = ?', {pData.PlayerData.citizenid, plate}, function(result)
-        if result[1] then
-            return result[1]
-        else
-            return nil
-        end
-    end)
+    local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE citizenid = ? and plate = ?', {pData.PlayerData.citizenid, plate})
+    return result[1]
 end)
 
 lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, plate)
     local vehicles = GetAllVehicles()
     for _, vehicle in pairs(vehicles) do
         local pl = GetVehicleNumberPlateText(vehicle)
-        if pl == plate then
-            return GetEntityCoords(vehicle)
-        end
+        if pl == plate then  return GetEntityCoords(vehicle) end
     end
     local result = MySQL.Sync.fetchAll('SELECT * FROM player_vehicles WHERE plate = ?', {plate})
     local veh = result[1]
@@ -59,10 +48,7 @@ lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, p
     local garage = Garages[garageName]
 
     if garage then
-        if garage.blipcoords then
-            return garage.blipcoords
-        end
-
+        if garage.blipcoords then return garage.blipcoords end
         if garage.Zone and garage.Zone.Shape and garage.Zone.Shape[1] then
             return vector3(garage.Zone.Shape[1].x, garage.Zone.Shape[1].y, garage.Zone.minZ)
         end
@@ -71,9 +57,7 @@ lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, p
     local result = MySQL.query.await('SELECT * FROM houselocations WHERE name = ?', {garageName})
     if result and result[1] then
         local coords = json.decode(result[1].garage)
-        if coords then
-            return vector3(coords.x, coords.y, coords.z)
-        end
+        if coords then return vector3(coords.x, coords.y, coords.z) end
 
         return nil
     end
@@ -82,7 +66,7 @@ lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, p
 end)
 
 lib.callback.register("qb-garage:server:CheckSpawnedVehicle", function(source, plate)
-    return VehicleSpawnerVehicles[plate] ~= nil and VehicleSpawnerVehicles[plate]
+    return VehicleSpawnerVehicles[plate]
 end)
 
 RegisterNetEvent("qb-garage:server:UpdateSpawnedVehicle", function(plate, value)
@@ -143,9 +127,7 @@ local function GetVehicleByPlate(plate)
     local vehicles = GetAllVehicles() -- Get all vehicles known to the server
     for _, vehicle in pairs(vehicles) do
         local pl = GetVehicleNumberPlateText(vehicle)
-        if pl == plate then
-            return vehicle
-        end
+        if pl == plate then return vehicle end
     end
     return nil
 end
@@ -336,22 +318,20 @@ RegisterNetEvent('qb-garage:server:PayDepotPrice', function(data)
     local Player = exports.qbx_core:GetPlayer(src)
     local cashBalance = Player.PlayerData.money.cash
     local bankBalance = Player.PlayerData.money.bank
-
     local vehicle = data.vehicle
 
-     MySQL.query('SELECT * FROM player_vehicles WHERE plate = ?', {vehicle.plate}, function(result)
-        if result[1] then
-            local vehicle = result[1]
-            local depotPrice = vehicle.depotprice ~= 0 and vehicle.depotprice or svConfig.DepotPrice
-            if cashBalance >= depotPrice then
-                Player.Functions.RemoveMoney("cash", depotPrice, "paid-depot")
-            elseif bankBalance >= depotPrice then
-                Player.Functions.RemoveMoney("bank", depotPrice, "paid-depot")
-            else
-                exports.qbx_core:Notify(src, locale("not_enough"), 'error')
-            end
+    local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ?', {vehicle.plate})
+    if result[1] then
+        vehicle = result[1]
+        local depotPrice = vehicle.depotprice ~= 0 and vehicle.depotprice or svConfig.DepotPrice
+        if cashBalance >= depotPrice then
+            Player.Functions.RemoveMoney("cash", depotPrice, "paid-depot")
+        elseif bankBalance >= depotPrice then
+            Player.Functions.RemoveMoney("bank", depotPrice, "paid-depot")
+        else
+            exports.qbx_core:Notify(src, locale("not_enough"), 'error')
         end
-    end)
+    end
 end)
 
 RegisterNetEvent('qb-garages:server:parkVehicle', function(source, plate)
@@ -368,29 +348,11 @@ end)
 
 -- External Calls
 -- Call from qbx_vehiclesales
--- Left Compatibility for qbx_vehiclesales
 
-local QBCore = exports['qb-core']:GetCoreObject()
-
-QBCore.Functions.CreateCallback("qb-garage:server:checkVehicleOwner", function(source, cb, plate)
-    local pData = exports.qbx_core:GetPlayer(source)
-    MySQL.query('SELECT * FROM player_vehicles WHERE plate = ? AND citizenid = ?',{plate, pData.PlayerData.citizenid}, function(result)
-        if result[1] then
-            cb(true, result[1].balance)
-        else
-            cb(false)
-        end
-    end)
-end)
-
-lib.callback.register("qb-garage:server:checkVehicleOwner", function(source, plate)
-    local pData = exports.qbx_core:GetPlayer(source)
-    local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ? AND citizenid = ?',{ plate, pData.PlayerData.citizenid })
-    if result[1] then
-        return true, result[1].balance
-    end
-
-    return false
+lib.callback.register('qb-garage:server:checkVehicleOwner', function(source, plate)
+    local player = exports.qbx_core:GetPlayer(source)
+    local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ? AND citizenid = ?',{plate, player.PlayerData.citizenid})
+    return result[1], result[1]?.balance
 end)
 
 --Call from qb-phone
@@ -398,55 +360,52 @@ lib.callback.register('qb-garage:server:GetPlayerVehicles', function(source)
     local Player = exports.qbx_core:GetPlayer(source)
     local Vehicles = {}
 
-     MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = ?', {Player.PlayerData.citizenid}, function(result)
-        if result[1] then
-            for k, v in pairs(result) do
-                local VehicleData = exports.qbx_core:GetVehiclesByName()[v.vehicle]
-                if not VehicleData then goto continue end
-                local VehicleGarage = locale("no_garage")
-                if v.garage ~= nil then
-                    if Garages[v.garage] ~= nil then
-                        VehicleGarage = Garages[v.garage].label
-                    elseif HouseGarages[v.garage] then
-                        VehicleGarage = HouseGarages[v.garage].label
-                    end
-                end
+    local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE citizenid = ?', {Player.PlayerData.citizenid})
+    if not result[1] then return nil end
 
-                if v.state == 0 then
-                    v.state = locale("out")
-                elseif v.state == 1 then
-                    v.state = locale("garaged")
-                elseif v.state == 2 then
-                    v.state = locale("impound")
-                end
-
-                local fullname
-                if VehicleData["brand"] ~= nil then
-                    fullname = VehicleData["brand"] .. " " .. VehicleData["name"]
-                else
-                    fullname = VehicleData["name"]
-                end
-                local spot = json.decode(v.parkingspot)
-                Vehicles[#Vehicles+1] = {
-                    fullname = fullname,
-                    brand = VehicleData["brand"],
-                    model = VehicleData["name"],
-                    plate = v.plate,
-                    garage = VehicleGarage,
-                    state = v.state,
-                    fuel = v.fuel,
-                    engine = v.engine,
-                    body = v.body,
-                    parkingspot = spot and vector3(spot.x, spot.y, spot.z) or nil,
-                    damage = json.decode(v.damage)
-                }
-                ::continue::
+    for _, v in pairs(result) do
+        local VehicleData = exports.qbx_core:GetVehiclesByName()[v.vehicle]
+        if not VehicleData then goto continue end
+        local VehicleGarage = locale("no_garage")
+        if v.garage then
+            if Garages[v.garage] then
+                VehicleGarage = Garages[v.garage].label
+            elseif HouseGarages[v.garage] then
+                VehicleGarage = HouseGarages[v.garage].label
             end
-            return Vehicles
-        else
-            return nil
         end
-    end)
+
+        if v.state == 0 then
+            v.state = locale("out")
+        elseif v.state == 1 then
+            v.state = locale("garaged")
+        elseif v.state == 2 then
+            v.state = locale("impound")
+        end
+
+        local fullname
+        if VehicleData["brand"] then
+            fullname = VehicleData["brand"] .. " " .. VehicleData["name"]
+        else
+            fullname = VehicleData["name"]
+        end
+        local spot = json.decode(v.parkingspot)
+        Vehicles[#Vehicles+1] = {
+            fullname = fullname,
+            brand = VehicleData["brand"],
+            model = VehicleData["name"],
+            plate = v.plate,
+            garage = VehicleGarage,
+            state = v.state,
+            fuel = v.fuel,
+            engine = v.engine,
+            body = v.body,
+            parkingspot = spot and vector3(spot.x, spot.y, spot.z) or nil,
+            damage = json.decode(v.damage)
+        }
+        ::continue::
+    end
+    return Vehicles
 end)
 
 local function GetRandomPublicGarage()
@@ -467,7 +426,7 @@ lib.addCommand("restorelostcars", {
     restricted = svConfig.RestoreCommandPermissionLevel
 }, function(source, args)
     local src = source
-    if next(Garages) ~= nil then
+    if next(Garages) then
         local destinationGarage = args.destination_garage and args.destination_garage or GetRandomPublicGarage()
         if Garages[destinationGarage] == nil then
             exports.qbx_core:Notify(src, 'Invalid garage name provided', 'error', 4500)
@@ -475,20 +434,17 @@ lib.addCommand("restorelostcars", {
         end
 
         local invalidGarages = {}
-        MySQL.query('SELECT garage FROM player_vehicles', function(result)
-            if result[1] then
-                for _,v in ipairs(result) do
-                    if Garages[v.garage] == nil then
-                        if v.garage then
-                            invalidGarages[v.garage] = true
-                        end
-                    end
+        local result = MySQL.query('SELECT garage FROM player_vehicles')
+        if result[1] then
+            for _,v in ipairs(result) do
+                if Garages[v.garage] == nil then
+                    if v.garage then invalidGarages[v.garage] = true end
                 end
-                for garage,_ in pairs(invalidGarages) do
-                    MySQL.update('UPDATE player_vehicles set garage = ? WHERE garage = ?',{destinationGarage, garage})
-                end
-                MySQL.update('UPDATE player_vehicles set garage = ? WHERE garage IS NULL OR garage = \'\'',{destinationGarage})
             end
-        end)
+            for garage,_ in pairs(invalidGarages) do
+                MySQL.update('UPDATE player_vehicles set garage = ? WHERE garage = ?',{destinationGarage, garage})
+            end
+            MySQL.update('UPDATE player_vehicles set garage = ? WHERE garage IS NULL OR garage = \'\'',{destinationGarage})
+        end
     end
 end)

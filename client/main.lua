@@ -923,7 +923,7 @@ CreateThread(function()
     for _, garage in pairs(Garages) do
         if garage.showBlip then
             local Garage = AddBlipForCoord(garage.blipcoords.x, garage.blipcoords.y, garage.blipcoords.z)
-            local blipColor = garage.blipColor ~= nil and garage.blipColor or 3
+            local blipColor = garage.blipColor or 3
             SetBlipSprite(Garage, garage.blipNumber)
             SetBlipDisplay(Garage, 4)
             SetBlipScale(Garage, 0.60)
