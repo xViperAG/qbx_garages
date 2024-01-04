@@ -8,7 +8,8 @@ local MenuItemId1, MenuItemId2 = nil, nil
 local VehicleClassMap = {}
 
 local config = require 'config.client'
-local shConfig = require 'config.shared'
+local Garages = require 'config.shared'.Garages
+local HouseGarages = require 'config.shared'.HouseGarages
 
 -- helper functions
 local function TableContains(tab, val)
@@ -106,7 +107,7 @@ end
 
 -- Menus
 local function PublicGarage(garageName, type)
-    local garage = shConfig.Garages[garageName]
+    local garage = Garages[garageName]
     local categories = garage.vehicleCategories
     local superCategory = GetSuperCategoryFromCategories(categories)
     lib.registerContext({
@@ -121,7 +122,7 @@ local function PublicGarage(garageName, type)
                     garageId = garageName,
                     garage = garage,
                     categories = categories,
-                    header =  locale(garage.type.."_"..superCategory, {value = garage.label}),
+                    header =  locale(garage.type.."_"..superCategory, garage.label),
                     superCategory = superCategory,
                     type = type
                 }
@@ -144,8 +145,8 @@ local function MenuHouseGarage()
                 args = {
                     garageId = CurrentHouseGarage,
                     categories = config.HouseGarageCategories,
-                    header =  shConfig.HouseGarages[CurrentHouseGarage].label,
-                    garage = shConfig.HouseGarages[CurrentHouseGarage],
+                    header =  HouseGarages[CurrentHouseGarage].label,
+                    garage = HouseGarages[CurrentHouseGarage],
                     superCategory = superCategory,
                     type = 'house'
                 }
@@ -229,7 +230,7 @@ local function Round(num, numDecimalPlaces)
 end
 
 local function ExitAndDeleteVehicle(vehicle)
-    local garage = shConfig.Garages[CurrentGarage]
+    local garage = Garages[CurrentGarage]
     local exitLocation = nil
     if garage and garage.ExitWarpLocations and next(garage.ExitWarpLocations) then
         _, _, exitLocation = GetClosestLocation(garage.ExitWarpLocations)
@@ -257,7 +258,7 @@ local function GetVehicleCategoriesFromClass(class)
 end
 
 local function IsAuthorizedToAccessGarage(garageName)
-    local garage = shConfig.Garages[garageName]
+    local garage = Garages[garageName]
 
     if not garage then return false end
 
@@ -284,7 +285,7 @@ local function IsAuthorizedToAccessGarage(garageName)
 end
 
 local function CanParkVehicle(veh, garageName, vehLocation)
-    local garage = garageName and shConfig.Garages[garageName] or (CurrentGarage and shConfig.Garages[CurrentGarage] or shConfig.HouseGarages[CurrentHouseGarage])
+    local garage = garageName and Garages[garageName] or (CurrentGarage and Garages[CurrentGarage] or HouseGarages[CurrentHouseGarage])
     if not garage then return false end
     local parkingDistance = garage.ParkingDistance and garage.ParkingDistance or config.ParkingDistance
     local vehClass = GetVehicleClass(veh)
@@ -329,7 +330,7 @@ local function ParkOwnedVehicle(veh, garageName, vehLocation, plate)
 
     if not properties then return end
 
-    TriggerServerEvent('qb-garage:server:updateVehicle', 1, totalFuel, engineDamage, bodyDamage, properties, plate, garageName, shConfig.StoreParkinglotAccuratly and closestVec3 or nil)
+    TriggerServerEvent('qb-garage:server:updateVehicle', 1, totalFuel, engineDamage, bodyDamage, properties, plate, garageName, config.StoreParkinglotAccuratly and closestVec3 or nil)
     ExitAndDeleteVehicle(veh)
     if plate then
         OutsideVehicles[plate] = nil
@@ -353,7 +354,7 @@ end
 local function ParkVehicle(veh, garageName, vehLocation)
     local plate = GetPlate(veh)
     local garageName = garageName or (CurrentGarage or CurrentHouseGarage)
-    local garage = shConfig.Garages[garageName]
+    local garage = Garages[garageName]
     local garagetype = garage and garage.type or 'house'
     local gang = PlayerGang.name
     local job = PlayerJob.name
@@ -408,7 +409,7 @@ end
 
 local function UpdateRadialMenu(garagename)
     CurrentGarage = garagename or CurrentGarage or nil
-    local garage = shConfig.Garages[CurrentGarage]
+    local garage = Garages[CurrentGarage]
     if CurrentGarage and garage then
         if garage.type == 'job' and (type(garage) == "table" or not IsStringNilOrEmpty(garage.job)) then
             if IsAuthorizedToAccessGarage(CurrentGarage) then
@@ -432,7 +433,7 @@ end
 
 local function RegisterHousePoly(house)
     if GaragePoly[house] then return end
-    local coords = shConfig.HouseGarages[house].takeVehicle
+    local coords = HouseGarages[house].takeVehicle
     if not coords or not coords.x then return end
     local pos = vector3(coords.x, coords.y, coords.z)
     GaragePoly[house] = lib.zones.box({
@@ -461,7 +462,7 @@ end
 
 local function JobMenuGarage(garageName)
     local playerJob = PlayerJob.name
-    local garage = shConfig.Garages[garageName]
+    local garage = Garages[garageName]
     local jobGarage = nil
 
     if not type(garage.jobGarageIdentifier) == "table" then
@@ -546,7 +547,7 @@ end
 
 local function GetFreeSingleParkingSpot(freeParkingSpots, vehicle)
     local checkAt = nil
-    if shConfig.StoreParkinglotAccuratly and config.SpawnAtLastParkinglot and vehicle and vehicle.parkingspot then
+    if config.StoreParkinglotAccuratly and config.SpawnAtLastParkinglot and vehicle and vehicle.parkingspot then
         checkAt = vector3(vehicle.parkingspot.x, vehicle.parkingspot.y, vehicle.parkingspot.z) or nil
     end
     local _, _, location = GetClosestLocation(freeParkingSpots, checkAt)
@@ -642,7 +643,7 @@ local function UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleC
 end
 
 local function SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
-    local garage = shConfig.Garages[CurrentGarage]
+    local garage = Garages[CurrentGarage]
     local jobGrade = QBX.PlayerData.job.grade.level
     local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
     local veh = NetToVeh(netId)
@@ -725,8 +726,8 @@ RegisterNetEvent("qb-garages:client:GarageMenu", function(data)
 
         if type == "depot" then
             MenuGarageOptions[#MenuGarageOptions + 1] = {
-                title = locale('header_depot', {value = vname, value2 = v.depotprice }),
-                description = locale('text_depot', {value = v.plate}),
+                title = locale('header_depot', vname, v.depotprice ),
+                description = locale('text_depot', v.plate),
                 icon = "fas fa-car-side",
                 arrow = true,
                 colorScheme = 'red',
@@ -745,10 +746,8 @@ RegisterNetEvent("qb-garages:client:GarageMenu", function(data)
             }
         else
             MenuGarageOptions[#MenuGarageOptions + 1] = {
-                title = locale('header_garage', {value = vname, value2 = v.plate}),
-                description = locale('text_garage', {
-                    value = v.state
-                }),
+                title = locale('header_garage', vname, v.plate),
+                description = locale('text_garage', v.state ),
                 icon = "fas fa-car-side",
                 arrow = true,
                 colorScheme = 'red',
@@ -799,7 +798,7 @@ end)
 
 RegisterNetEvent('qb-garages:client:OpenMenu', function()
     if CurrentGarage then
-        local garage = shConfig.Garages[CurrentGarage]
+        local garage = Garages[CurrentGarage]
         local garageType = garage.type
         if garageType == 'job' and garage.useVehicleSpawner then
             JobMenuGarage(CurrentGarage)
@@ -861,7 +860,7 @@ end)
 
 RegisterNetEvent('qb-garages:client:setHouseGarage', function(house, hasKey)
     if hasKey then
-        if shConfig.HouseGarages[house] and shConfig.HouseGarages[house].takeVehicle.x then
+        if HouseGarages[house] and HouseGarages[house].takeVehicle.x then
             RegisterHousePoly(house)
         end
     else
@@ -873,12 +872,12 @@ RegisterNetEvent('qb-garages:client:houseGarageConfig', function(garageConfig)
     for _,v in pairs(garageConfig) do
         v.vehicleCategories = config.HouseGarageCategories
     end
-    shConfig.HouseGarages = garageConfig
+    HouseGarages = garageConfig
 end)
 
 RegisterNetEvent('qb-garages:client:addHouseGarage', function(house, garageInfo)
     garageInfo.vehicleCategories = config.HouseGarageCategories
-    shConfig.HouseGarages[house] = garageInfo
+    HouseGarages[house] = garageInfo
 end)
 
 RegisterNetEvent('qb-garages:client:removeHouseGarage', function(house)
@@ -921,10 +920,10 @@ end)
 -- Threads
 
 CreateThread(function()
-    for _, garage in pairs(shConfig.Garages) do
+    for _, garage in pairs(Garages) do
         if garage.showBlip then
             local Garage = AddBlipForCoord(garage.blipcoords.x, garage.blipcoords.y, garage.blipcoords.z)
-            local blipColor = garage.blipColor ~= nil and garage.blipColor or 3
+            local blipColor = garage.blipColor or 3
             SetBlipSprite(Garage, garage.blipNumber)
             SetBlipDisplay(Garage, 4)
             SetBlipScale(Garage, 0.60)
@@ -939,7 +938,7 @@ CreateThread(function()
 end)
 
 CreateThread(function()
-    for garageName, garage in pairs(shConfig.Garages) do
+    for garageName, garage in pairs(Garages) do
         if (garage.type == 'public' or garage.type == 'depot' or garage.type == 'job' or garage.type == 'gang') then
             local zone = {}
             for _, value in pairs(garage.Zone.Shape) do
@@ -975,14 +974,14 @@ end)
 
 CreateThread(function()
     local debug = false
-    for _, garage in pairs(shConfig.Garages) do
+    for _, garage in pairs(Garages) do
         if garage.debug then
             debug = true
             break
         end
     end
     while debug do
-        for _, garage in pairs(shConfig.Garages) do
+        for _, garage in pairs(Garages) do
             local parkingSpots = garage.ParkingSpots and garage.ParkingSpots or {}
             if next(parkingSpots) and garage.debug then
                 for _, location in pairs(parkingSpots) do
