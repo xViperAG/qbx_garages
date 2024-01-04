@@ -995,7 +995,7 @@ CreateThread(function()
 end)
 
 CreateThread(function()
-    for category, classes  in pairs(Config.VehicleCategories) do
+    for category, classes  in pairs(config.VehicleCategories) do
         for _, class  in pairs(classes) do
             VehicleClassMap[class] = VehicleClassMap[class] or {}
             VehicleClassMap[class][#VehicleClassMap[class]+1] = category
