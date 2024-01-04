@@ -110,24 +110,43 @@ local function PublicGarage(garageName, type)
     local garage = Garages[garageName]
     local categories = garage.vehicleCategories
     local superCategory = GetSuperCategoryFromCategories(categories)
+
+    local options = {
+        {
+            title = locale("header_vehicles"),
+            description = locale("text_vehicles"),
+            event = "qb-garages:client:GarageMenu",
+            args = {
+                garageId = garageName,
+                garage = garage,
+                categories = categories,
+                header =  locale(garage.type.."_"..superCategory, garage.label),
+                superCategory = superCategory,
+                type = type
+            }
+        }
+    }
+
+    if PlayerJob.type == 'leo' and GetResourceState('xt-pdextras') == 'started' then
+        options[#options + 1] = {
+            title = 'Raid Garage',
+            description = 'Search for a citizen\'s vehicles',
+            icon = 'fas fa-magnifying-glass',
+            event = 'xt-pdextras:client:raidGarage',
+            args = {
+                garage = garage,
+                garageId = garageName,
+                categories = categories,
+                superCategory = superCategory,
+                type = type,
+            }
+        }
+    end
+
     lib.registerContext({
         id = 'qbx_publicVehicle_list',
         title = garage.label,
-        options = {
-            {
-                title = locale("header_vehicles"),
-                description = locale("text_vehicles"),
-                event = "qb-garages:client:GarageMenu",
-                args = {
-                    garageId = garageName,
-                    garage = garage,
-                    categories = categories,
-                    header =  locale(garage.type.."_"..superCategory, garage.label),
-                    superCategory = superCategory,
-                    type = type
-                }
-            }
-        }
+        options = options
     })
     lib.showContext('qbx_publicVehicle_list')
 end
@@ -318,7 +337,7 @@ local function ParkOwnedVehicle(veh, garageName, vehLocation, plate)
 
     if config.FuelScript then
         totalFuel = exports[config.FuelScript]:GetFuel(veh)
-    else
+    elseif config.FuelScript == '' then
         totalFuel = Entity(veh).state.fuel
     end
 
@@ -372,7 +391,7 @@ end
 local function AddRadialParkingOption()
     local veh, dist = GetClosestVehicle()
     if (veh and dist <= config.VehicleParkDistance and config.AllowParkingFromOutsideVehicle) or IsPedInAnyVehicle(cache.ped, false) then
-	if MenuItemId1 then return end
+        if MenuItemId1 then return end
         MenuItemId1 = exports.qbx_radialmenu:AddOption({
             id = 'put_up_vehicle',
             title = 'Park Vehicle',
@@ -616,7 +635,7 @@ local function UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleC
     local plate = GetPlate(veh)
     if config.FuelScript then
         exports[config.FuelScript]:SetFuel(veh, 100)
-    else
+    elseif config.FuelScript == '' then
         Entity(veh).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
     end
     TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
@@ -660,7 +679,7 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage, prop
         end
         if config.FuelScript then
             exports[config.FuelScript]:SetFuel(spawnedVehicle, 100)
-        else
+        elseif config.FuelScript == '' then
             Entity(spawnedVehicle).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
         TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
@@ -671,7 +690,7 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage, prop
         end
         if config.FuelScript then
             exports[config.FuelScript]:SetFuel(spawnedVehicle, vehicleInfo.fuel)
-        else
+        elseif config.FuelScript == '' then
             Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
         lib.setVehicleProperties(spawnedVehicle, properties or {})
@@ -788,9 +807,7 @@ RegisterNetEvent('qb-garages:client:TakeOutGarage', function(data, cb)
         local netId, properties = lib.callback.await('qb-garage:server:spawnvehicle', false, vehicle, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
         Wait(100)
         local veh = NetToVeh(netId)
-        if not veh or not netId then
-            print("ISSUE HERE: ", netId)
-        end
+        if not veh or not netId then print("ISSUE HERE: ", netId) end
         UpdateSpawnedVehicle(veh, vehicle, heading, garage, properties)
         if cb then cb(veh) end
     end
@@ -949,6 +966,8 @@ CreateThread(function()
                 thickness = garage.Zone.Thickness,
                 debug = false,
                 onEnter = function()
+                    if config.Debug then print('is in garage') end
+
                     if IsAuthorizedToAccessGarage(garageName) then
                         UpdateRadialMenu(garageName)
                         lib.showTextUI(Garages[CurrentGarage].drawText, { position = config.DrawTextPosition })

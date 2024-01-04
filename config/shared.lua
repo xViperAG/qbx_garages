@@ -53,6 +53,8 @@
 ]]
 
 return {
+    Debug = true, -- To Debug the script
+
     HouseGarages = {}, -- DO NOT TOUCH!!
     Garages = {
         --[[

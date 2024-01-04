@@ -12,6 +12,9 @@ Almost everything is fully customizable to the last bit!
  - [qbx_radialmenu](https://github.com/Qbox-project/qbx_radialmenu)
  - [qbx_core](https://github.com/Qbox-project/qbx_core)
 
+## Optional Dependencies
+ - [xt-pdextras](https://github.com/xT-Development/xt-pdextras)
+
 ## Installation
 
 Drag 'n Drop replace for qbx_garages.
