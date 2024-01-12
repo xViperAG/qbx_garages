@@ -12,6 +12,9 @@ Almost everything is fully customizable to the last bit!
  - [qbx_radialmenu](https://github.com/Qbox-project/qbx_radialmenu)
  - [qbx_core](https://github.com/Qbox-project/qbx_core)
 
+## Optional Dependencies
+ - [xt-pdextras](https://github.com/xT-Development/xt-pdextras)
+
 ## Installation
 
 Drag 'n Drop replace for qbx_garages.
@@ -19,6 +22,14 @@ Drag 'n Drop replace for qbx_garages.
 - Delete qbx_garages.
 - Drag the downloaded qbx_garages folder into the [qbx] folder.
 - If you want to use the latest features, apply patch1.sql to your DB
+
+## IMPORTANT CHANGE!!!
+
+- Remove `@qbx_garages/config.lua` and add the respective `local Garages = require '@qbx_garages.config.shared'.Garages` and `local HouseGarages = require '@qbx_garages.config.shared'.HouseGarages` to whichever client or server script you are needing.
+
+**OR**
+
+- Change `@qbx_garages/config.lua` to `@qbx_garages/compat/shared.lua` in the fxmanifest.lua
 
 ## Features
 
@@ -109,6 +120,7 @@ local garageName = 'pdgarage'
         },
     })
 ```
+
 ### New Phone Tracking Using Export
 Replace:
 

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `player_vehicles` (
     `plate` varchar(15) NOT NULL,
     `fakeplate` varchar(50) DEFAULT NULL,
     `garage` varchar(50) DEFAULT NULL,
+    `parkingspot` varchar(200) NULL DEFAULT NULL
     `fuel` int(11) DEFAULT 100,
     `engine` float DEFAULT 1000,
     `body` float DEFAULT 1000,
