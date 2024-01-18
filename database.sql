@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `player_vehicles` (
     `citizenid` varchar(50) DEFAULT NULL,
     `vehicle` varchar(50) DEFAULT NULL,
     `hash` varchar(50) DEFAULT NULL,
-    `mods` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+    `mods` longtext DEFAULT NULL,
     `plate` varchar(15) NOT NULL,
     `fakeplate` varchar(50) DEFAULT NULL,
     `garage` varchar(50) DEFAULT NULL,
