@@ -819,7 +819,7 @@ RegisterNetEvent('qb-garages:client:TakeOutGarage', function(data, cb)
 
     local location, heading = GetSpawnLocationAndHeading(garage, garageType, parkingSpots, vehicle, spawnDistance)
 
-    if not location and not heading then return end
+    -- if not location and not heading then return end (This was added into qb-garages, seems to be that it's finicky.)
 
     if garage.useVehicleSpawner then
         SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
