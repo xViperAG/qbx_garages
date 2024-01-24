@@ -499,7 +499,9 @@ local function AddRadialParkingOption()
             id = 'park_vehicle',
             icon = 'square-parking',
             label = locale('park_vehicle'),
-            onSelect = ParkVehicleRadial,
+            onSelect = function()
+                ParkVehicleRadial()
+            end,
         })
     end
 	if not cache.vehicle then
@@ -507,7 +509,9 @@ local function AddRadialParkingOption()
             id = 'open_garage',
             icon = 'warehouse',
             label = locale('open_garage'),
-            onSelect = OpenGarageMenu()
+            onSelect = function()
+                OpenGarageMenu()
+            end
         })
 	end
 end
@@ -517,7 +521,9 @@ local function AddRadialImpoundOption()
         id = 'open_impound',
         icon = 'warehouse',
         label = locale('open_impound'),
-        onSelect = OpenGarageMenu()
+        onSelect = function()
+            OpenGarageMenu()
+        end,
     })
 end
 
