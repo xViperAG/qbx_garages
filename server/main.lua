@@ -97,16 +97,18 @@ local function addVehicleItems(source, plate)
     end
 end
 
-lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(source, model, coords, warp)
+lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(source, model, coords, warp, garage)
     local netId = qbx.spawnVehicle({
         model = model,
         spawnSource = coords,
         warp = warp
     })
+    local veh = NetworkGetEntityFromNetworkId(netId)
+    local prefixPlate = Garages[garage].PlatePrefix..tostring(math.random(1000, 9999))
 
-    local plate = qbx.getVehiclePlate(netId)
+    if not Garages[garage].PlatePrefix then Plate = qbx.getVehiclePlate(veh) else Plate = prefixPlate SetVehicleNumberPlateText(veh, Plate) end
 
-    if svConfig.addVehicleItems then addVehicleItems(source, plate) end
+    if svConfig.addVehicleItems then addVehicleItems(source, Plate) end
 
     return netId
 end)
