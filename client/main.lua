@@ -393,7 +393,7 @@ local function JobMenuGarage(garageName)
     local garage = Garages[garageName]
     local jobGarage = nil
 
-    if not type(garage.jobGarageIdentifier) == "table" then
+if type(garage.jobGarageIdentifier) ~= "table" then
         jobGarage = config.JobVehicles[garage.jobGarageIdentifier]
     else
         local identifiers = garage.jobGarageIdentifier
