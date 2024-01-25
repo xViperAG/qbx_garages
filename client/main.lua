@@ -689,7 +689,7 @@ end
 local function SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
     local garage = Garages[CurrentGarage]
     local jobGrade = QBX.PlayerData.job.grade.level
-    local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
+    local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil, CurrentGarage)
     local veh = NetToVeh(netId)
     UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleConfig, cb)
 end
