@@ -503,3 +503,12 @@ lib.addCommand("restorelostcars", {
         end
     end
 end)
+
+AddEventHandler('baseevents:enteredVehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+end)
+
+AddEventHandler('baseevents:leftVehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+end)
+
