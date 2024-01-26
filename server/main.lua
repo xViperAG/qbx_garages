@@ -104,7 +104,7 @@ lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(s
 
     if not Garages[garage].PlatePrefix then Plate = qbx.getVehiclePlate(veh) else Plate = prefixPlate SetVehicleNumberPlateText(veh, Plate) end
 
-    if svConfig.addVehicleItems then addVehicleItems(source, Plate) end
+    if svConfig.addVehicleItems or Garages[garage].addVehicleItems then addVehicleItems(src, Plate) end
 
     return netId
 end)
