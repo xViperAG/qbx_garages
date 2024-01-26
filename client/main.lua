@@ -267,7 +267,7 @@ local function ExitAndDeleteVehicle(vehicle)
     local plate = GetVehicleNumberPlateText(vehicle)
     Wait(1500)
     DeleteVehicle(vehicle)
-    RemoveRadialOptions()
+    lib.removeRadialItem('park_vehicle')
     Wait(1000)
     TriggerServerEvent('qb-garages:server:parkVehicle', plate)
 end
