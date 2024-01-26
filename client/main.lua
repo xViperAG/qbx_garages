@@ -969,14 +969,6 @@ CreateThread(function()
                         lib.showTextUI(Garages[CurrentGarage].drawText, { position = config.DrawTextPosition })
                     end
                 end,
-                inside = function (self)
-                    while self.insideZone do
-                        Wait(2500)
-                        if self.insideZone then
-                            UpdateRadialMenu(garageName)
-                        end
-                    end
-                end,
                 onExit = function()
                     ResetCurrentGarage()
 					RemoveRadialOptions()
