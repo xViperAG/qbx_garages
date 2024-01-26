@@ -86,14 +86,10 @@ local function addVehicleItems(source, plate)
     local player = exports.qbx_core:GetPlayer(source)
     local invId, invLabel = 'trunk' .. plate, 'Job Trunk'
 
-    exports.ox_inventory:RegisterStash(invId, invLabel, 10, 20000)
-
     Wait(500)
 
-    for k, v in pairs(svConfig.TrunkItems) do
-        if player.PlayerData.job.name == svConfig.TrunkItems[k] then
-            exports.ox_inventory:AddItem(invId, v.name, v.amount)
-        end
+    for k, v in pairs(svConfig.TrunkItems[player.PlayerData.job.name]) do
+        exports.ox_inventory:AddItem(invId, v.name, v.amount)
     end
 end
 
