@@ -506,6 +506,7 @@ end)
 
 AddEventHandler('baseevents:enteredVehicle', function(vehicle)
     UpdateRadialMenu(CurrentGarage)
+    lib.removeRadialItem('open_garage')
 end)
 
 AddEventHandler('baseevents:leftVehicle', function(vehicle)
