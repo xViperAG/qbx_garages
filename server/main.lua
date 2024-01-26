@@ -89,7 +89,9 @@ local function addVehicleItems(source, plate)
     Wait(500)
 
     for k, v in pairs(svConfig.TrunkItems[player.PlayerData.job.name]) do
-        exports.ox_inventory:AddItem(invId, v.name, v.amount)
+        if player.PlayerData.job.grade >= v.grade then
+            exports.ox_inventory:AddItem(invId, v.name, v.amount)
+        end
     end
 end
 
