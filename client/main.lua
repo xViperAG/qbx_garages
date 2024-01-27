@@ -950,6 +950,7 @@ CreateThread(function()
         end
     end
 end)
+
 CreateThread(function()
     for garageName, garage in pairs(Garages) do
         if (garage.type == 'public' or garage.type == 'depot' or garage.type == 'job' or garage.type == 'gang') then
@@ -974,7 +975,7 @@ CreateThread(function()
                     while self.insideZone do
                         if self.insideZone then
                             Wait(2500)
-                            if UpdateRadial then
+                            if UpdateRadial or lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance) then
                                 UpdateRadialMenu(garageName)
                                 UpdateRadial = false
                             end
