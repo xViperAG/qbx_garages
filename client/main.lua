@@ -10,6 +10,7 @@ local VehicleClassMap = {}
 local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
+local UpdateRadial = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -949,7 +950,6 @@ CreateThread(function()
         end
     end
 end)
-
 CreateThread(function()
     for garageName, garage in pairs(Garages) do
         if (garage.type == 'public' or garage.type == 'depot' or garage.type == 'job' or garage.type == 'gang') then
@@ -968,11 +968,24 @@ CreateThread(function()
                         UpdateRadialMenu(garageName)
                         lib.showTextUI(Garages[CurrentGarage].drawText, { position = config.DrawTextPosition })
                     end
+                    UpdateRadial = false
+                end,
+                inside = function (self)
+                    while self.insideZone do
+                        if self.insideZone then
+                            Wait(2500)
+                            if UpdateRadial then
+                                UpdateRadialMenu(garageName)
+                                UpdateRadial = false
+                            end
+                        end
+                    end
                 end,
                 onExit = function()
                     ResetCurrentGarage()
 					RemoveRadialOptions()
                     lib.hideTextUI()
+                    UpdateRadial = true
                 end
             })
         end
@@ -1007,4 +1020,12 @@ CreateThread(function()
             VehicleClassMap[class][#VehicleClassMap[class]+1] = category
         end
     end
+end)
+
+AddEventHandler('baseevents:enteredVehicle', function(vehicle)
+    UpdateRadial = true
+end)
+
+AddEventHandler('baseevents:leftVehicle', function(vehicle)
+    UpdateRadial = true
 end)
