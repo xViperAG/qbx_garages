@@ -11,6 +11,7 @@ local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
 local UpdateRadial = false
+local ParkingUpdated = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -972,12 +973,23 @@ CreateThread(function()
                     UpdateRadial = false
                 end,
                 inside = function (self)
+                    local ClosestVehicle = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
                     while self.insideZone do
+                        Wait(2500)
                         if self.insideZone then
-                            Wait(2500)
-                            if UpdateRadial or lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance) then
+                            if UpdateRadial then
                                 UpdateRadialMenu(garageName)
                                 UpdateRadial = false
+                            else
+                                if ClosestVehicle and not ParkingUpdated then
+                                    UpdateRadial = true
+                                    ParkingUpdated = true
+                                else
+                                    if ParkingUpdated and not ClosestVehicle then
+                                        UpdateRadial = true
+                                        ParkingUpdated = false
+                                    end
+                                end
                             end
                         end
                     end
