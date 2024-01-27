@@ -973,10 +973,10 @@ CreateThread(function()
                     UpdateRadial = false
                 end,
                 inside = function (self)
-                    local ClosestVehicle = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
                     while self.insideZone do
                         Wait(2500)
                         if self.insideZone then
+                            local ClosestVehicle = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
                             if UpdateRadial then
                                 UpdateRadialMenu(garageName)
                                 UpdateRadial = false
@@ -986,8 +986,8 @@ CreateThread(function()
                                     ParkingUpdated = true
                                 else
                                     if ParkingUpdated and not ClosestVehicle then
-                                        UpdateRadial = true
                                         ParkingUpdated = false
+                                        lib.removeRadialItem('park_vehicle')
                                     end
                                 end
                             end
