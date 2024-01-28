@@ -10,8 +10,6 @@ local VehicleClassMap = {}
 local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
-local UpdateRadial = false
-local ParkingUpdated = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -972,28 +970,14 @@ CreateThread(function()
                     end
                     UpdateRadial = false
                 end,
-                inside = function (self)
                     while self.insideZone do
                         Wait(2500)
                         if self.insideZone then
-                            local ClosestVehicle = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
-                            if UpdateRadial then
+                            lib.onCache('seat', function(value)
                                 UpdateRadialMenu(garageName)
-                                UpdateRadial = false
-                            else
-                                if ClosestVehicle and not ParkingUpdated then
-                                    UpdateRadial = true
-                                    ParkingUpdated = true
-                                else
-                                    if ParkingUpdated and not ClosestVehicle then
-                                        ParkingUpdated = false
-                                        lib.removeRadialItem('park_vehicle')
-                                    end
-                                end
-                            end
+                            end)
                         end
                     end
-                end,
                 onExit = function()
                     ResetCurrentGarage()
 					RemoveRadialOptions()
@@ -1035,10 +1019,3 @@ CreateThread(function()
     end
 end)
 
-AddEventHandler('baseevents:enteredVehicle', function(vehicle)
-    UpdateRadial = true
-end)
-
-AddEventHandler('baseevents:leftVehicle', function(vehicle)
-    UpdateRadial = true
-end)
