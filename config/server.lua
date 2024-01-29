@@ -7,13 +7,13 @@ return {
 
     TrunkItems = {
         police = {
-            { name = 'stormram', amount = 1 },
-            { name = 'heavyarmor', amount = 3 },
-            { name = 'ammo-pistol', amount = 50 },
+            { name = 'police_stormram', amount = 1, grade = 0 },
+            { name = 'heavyarmor', amount = 3,  grade = 0 },
+            { name = 'ammo-9', amount = 50,  grade = 0 },
         },
         ambulance = {
-            { name = 'WEAPON_FIREEXTINGUISHER', amount = 1 },
-            { name = 'bandages', amount = 5 }
+            { name = 'WEAPON_FIREEXTINGUISHER', amount = 1, grade = 0 },
+            { name = 'bandages', amount = 5, grade = 0 }
         }
     },
 

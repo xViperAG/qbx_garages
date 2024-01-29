@@ -86,27 +86,27 @@ local function addVehicleItems(source, plate)
     local player = exports.qbx_core:GetPlayer(source)
     local invId, invLabel = 'trunk' .. plate, 'Job Trunk'
 
-    exports.ox_inventory:RegisterStash(invId, invLabel, 10, 20000)
-
     Wait(500)
 
-    for k, v in pairs(svConfig.TrunkItems) do
-        if player.PlayerData.job.name == svConfig.TrunkItems[k] then
+    for k, v in pairs(svConfig.TrunkItems[player.PlayerData.job.name]) do
+        if player.PlayerData.job.grade >= v.grade then
             exports.ox_inventory:AddItem(invId, v.name, v.amount)
         end
     end
 end
 
-lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(source, model, coords, warp)
+lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(source, model, coords, warp, garage)
     local netId = qbx.spawnVehicle({
         model = model,
         spawnSource = coords,
         warp = warp
     })
+    local veh = NetworkGetEntityFromNetworkId(netId)
+    local prefixPlate = Garages[garage].PlatePrefix..tostring(math.random(1000, 9999))
 
-    local plate = qbx.getVehiclePlate(netId)
+    if not Garages[garage].PlatePrefix then Plate = qbx.getVehiclePlate(veh) else Plate = prefixPlate SetVehicleNumberPlateText(veh, Plate) end
 
-    if svConfig.addVehicleItems then addVehicleItems(source, plate) end
+    if svConfig.addVehicleItems or Garages[garage].addVehicleItems then addVehicleItems(src, Plate) end
 
     return netId
 end)
@@ -503,3 +503,13 @@ lib.addCommand("restorelostcars", {
         end
     end
 end)
+
+AddEventHandler('baseevents:enteredVehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+    lib.removeRadialItem('open_garage')
+end)
+
+AddEventHandler('baseevents:leftVehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+end)
+

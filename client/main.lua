@@ -10,6 +10,7 @@ local VehicleClassMap = {}
 local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
+local ParkEnabled = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -267,7 +268,6 @@ local function ExitAndDeleteVehicle(vehicle)
     local plate = GetVehicleNumberPlateText(vehicle)
     Wait(1500)
     DeleteVehicle(vehicle)
-    RemoveRadialOptions()
     Wait(1000)
     TriggerServerEvent('qb-garages:server:parkVehicle', plate)
 end
@@ -393,7 +393,7 @@ local function JobMenuGarage(garageName)
     local garage = Garages[garageName]
     local jobGarage = nil
 
-    if not type(garage.jobGarageIdentifier) == "table" then
+if type(garage.jobGarageIdentifier) ~= "table" then
         jobGarage = config.JobVehicles[garage.jobGarageIdentifier]
     else
         local identifiers = garage.jobGarageIdentifier
@@ -493,27 +493,14 @@ local function OpenGarageMenu()
 end
 
 local function AddRadialParkingOption()
-    local veh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
-    if veh and config.AllowParkingFromOutsideVehicle or cache.vehicle then
-        lib.addRadialItem({
-            id = 'park_vehicle',
-            icon = 'square-parking',
-            label = locale('park_vehicle'),
-            onSelect = function()
-                ParkVehicleRadial()
-            end,
-        })
-    end
-	if not cache.vehicle then
-        lib.addRadialItem({
-            id = 'open_garage',
-            icon = 'warehouse',
-            label = locale('open_garage'),
-            onSelect = function()
-                OpenGarageMenu()
-            end
-        })
-	end
+    lib.addRadialItem({
+        id = 'open_garage',
+        icon = 'warehouse',
+        label = locale('open_garage'),
+        onSelect = function()
+            OpenGarageMenu()
+        end
+    })
 end
 
 local function AddRadialImpoundOption()
@@ -689,7 +676,7 @@ end
 local function SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
     local garage = Garages[CurrentGarage]
     local jobGrade = QBX.PlayerData.job.grade.level
-    local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
+    local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil, CurrentGarage)
     local veh = NetToVeh(netId)
     UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleConfig, cb)
 end
@@ -950,6 +937,7 @@ CreateThread(function()
     end
 end)
 
+
 CreateThread(function()
     for garageName, garage in pairs(Garages) do
         if (garage.type == 'public' or garage.type == 'depot' or garage.type == 'job' or garage.type == 'gang') then
@@ -973,13 +961,32 @@ CreateThread(function()
                     while self.insideZone do
                         Wait(2500)
                         if self.insideZone then
-                            UpdateRadialMenu(garageName)
+                            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
+                            if GetPedInVehicleSeat(cache.vehicle, -1) == cache.ped or (config.AllowParkingFromOutsideVehicle and closestVeh) then
+                                if not ParkEnabled then
+                                    lib.addRadialItem({
+                                        id = 'park_vehicle',
+                                        icon = 'square-parking',
+                                        label = locale('park_vehicle'),
+                                        onSelect = function()
+                                            ParkVehicleRadial()
+                                        end,
+                                    })
+                                    ParkEnabled = true
+                                end
+                            else
+                                if ParkEnabled then
+                                    lib.removeRadialItem('park_vehicle')
+                                    ParkEnabled = false
+                                end
+                            end
                         end
                     end
                 end,
                 onExit = function()
                     ResetCurrentGarage()
 					RemoveRadialOptions()
+                    ParkEnabled = false
                     lib.hideTextUI()
                 end
             })

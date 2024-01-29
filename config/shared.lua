@@ -1448,6 +1448,7 @@ return {
             --useVehicleSpawner = false,
             --jobGarageIdentifier = 'pd1',
             vehicleCategories = {'emergency'},
+            --PlatePrefix = 'LSPD', -- Requires useVehicleSpawner = true
             drawText = 'Parking',
             ParkingSpots = {
                 vec4(445.67, -997.0, 24.81, 269.98),
