@@ -10,6 +10,7 @@ local VehicleClassMap = {}
 local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
+local ParkEnabled = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -493,14 +494,6 @@ end
 
 local function AddRadialParkingOption()
     lib.addRadialItem({
-        id = 'park_vehicle',
-        icon = 'square-parking',
-        label = locale('park_vehicle'),
-        onSelect = function()
-            ParkVehicleRadial()
-        end,
-    })
-    lib.addRadialItem({
         id = 'open_garage',
         icon = 'warehouse',
         label = locale('open_garage'),
@@ -963,6 +956,32 @@ CreateThread(function()
                         lib.showTextUI(Garages[CurrentGarage].drawText, { position = config.DrawTextPosition })
                     end
                 end,
+						                inside = function (self)
+                    while self.insideZone do
+                        Wait(2500)
+                        if self.insideZone then
+                            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
+                            if cache.vehicle or closestVeh then
+                                if not ParkEnabled then
+                                    lib.addRadialItem({
+                                        id = 'park_vehicle',
+                                        icon = 'square-parking',
+                                        label = locale('park_vehicle'),
+                                        onSelect = function()
+                                            ParkVehicleRadial()
+                                        end,
+                                    })
+                                    ParkEnabled = true
+                                end
+                            else
+                                if ParkEnabled then
+                                    lib.removeRadialItem('park_vehicle')
+                                    ParkEnabled = false
+                                end
+                            end
+                        end
+                    end
+                end,
                 onExit = function()
                     ResetCurrentGarage()
 			RemoveRadialOptions()
@@ -1019,6 +1038,8 @@ lib.onCache('seat', function(value)
         else
             --not driving (also triggered if switched seats)
             lib.removeRadialItem('park_vehicle')
+		ParkEnabled = false
+		end
         end
     end
 end)
