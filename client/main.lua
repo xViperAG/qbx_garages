@@ -937,6 +937,7 @@ CreateThread(function()
     end
 end)
 
+
 CreateThread(function()
     for garageName, garage in pairs(Garages) do
         if (garage.type == 'public' or garage.type == 'depot' or garage.type == 'job' or garage.type == 'gang') then
@@ -984,7 +985,8 @@ CreateThread(function()
                 end,
                 onExit = function()
                     ResetCurrentGarage()
-			RemoveRadialOptions()
+					RemoveRadialOptions()
+                    ParkEnabled = false
                     lib.hideTextUI()
                 end
             })
@@ -1021,4 +1023,3 @@ CreateThread(function()
         end
     end
 end)
-
