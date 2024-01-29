@@ -962,7 +962,7 @@ CreateThread(function()
                         Wait(2500)
                         if self.insideZone then
                             local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
-                            if GetPedInVehicleSeat(curVeh, -1) == cache.ped or closestVeh then
+                            if GetPedInVehicleSeat(cache.vehicle, -1) == cache.ped or closestVeh then
                                 if not ParkEnabled then
                                     lib.addRadialItem({
                                         id = 'park_vehicle',
