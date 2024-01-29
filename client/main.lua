@@ -956,12 +956,12 @@ CreateThread(function()
                         lib.showTextUI(Garages[CurrentGarage].drawText, { position = config.DrawTextPosition })
                     end
                 end,
-						                inside = function (self)
+                inside = function (self)
                     while self.insideZone do
                         Wait(2500)
                         if self.insideZone then
                             local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
-                            if cache.vehicle or closestVeh then
+                            if GetPedInVehicleSeat(curVeh, -1) == cache.ped or closestVeh then
                                 if not ParkEnabled then
                                     lib.addRadialItem({
                                         id = 'park_vehicle',
@@ -1022,24 +1022,3 @@ CreateThread(function()
     end
 end)
 
-lib.onCache('seat', function(value)
-    if value then 
-        if value == -1 then 
-            --im driving
-            if CurrentGarage then 
-                if GarageZones[CurrentGarage] then 
-                    if GarageZones[CurrentGarage]:contains(GetEntityCoords(PlayerPedId(), false)) then --in driver seat and inside a garage
-                        if IsAuthorizedToAccessGarage(CurrentGarage) then
-                            AddRadialParkingOption() --add parking button
-                        end
-                    end
-                end
-            end
-        else
-            --not driving (also triggered if switched seats)
-            lib.removeRadialItem('park_vehicle')
-		ParkEnabled = false
-		end
-        end
-    end
-end)
