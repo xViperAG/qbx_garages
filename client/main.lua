@@ -10,8 +10,6 @@ local VehicleClassMap = {}
 local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
-local UpdateRadial = false
-local ParkingUpdated = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -269,7 +267,6 @@ local function ExitAndDeleteVehicle(vehicle)
     local plate = GetVehicleNumberPlateText(vehicle)
     Wait(1500)
     DeleteVehicle(vehicle)
-    lib.removeRadialItem('park_vehicle')
     Wait(1000)
     TriggerServerEvent('qb-garages:server:parkVehicle', plate)
 end
@@ -495,27 +492,22 @@ local function OpenGarageMenu()
 end
 
 local function AddRadialParkingOption()
-    local veh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
-    if veh and config.AllowParkingFromOutsideVehicle or cache.vehicle then
-        lib.addRadialItem({
-            id = 'park_vehicle',
-            icon = 'square-parking',
-            label = locale('park_vehicle'),
-            onSelect = function()
-                ParkVehicleRadial()
-            end,
-        })
-    end
-	if not cache.vehicle then
-        lib.addRadialItem({
-            id = 'open_garage',
-            icon = 'warehouse',
-            label = locale('open_garage'),
-            onSelect = function()
-                OpenGarageMenu()
-            end
-        })
-	end
+    lib.addRadialItem({
+        id = 'park_vehicle',
+        icon = 'square-parking',
+        label = locale('park_vehicle'),
+        onSelect = function()
+            ParkVehicleRadial()
+        end,
+    })
+    lib.addRadialItem({
+        id = 'open_garage',
+        icon = 'warehouse',
+        label = locale('open_garage'),
+        onSelect = function()
+            OpenGarageMenu()
+        end
+    })
 end
 
 local function AddRadialImpoundOption()
@@ -970,35 +962,11 @@ CreateThread(function()
                         UpdateRadialMenu(garageName)
                         lib.showTextUI(Garages[CurrentGarage].drawText, { position = config.DrawTextPosition })
                     end
-                    UpdateRadial = false
-                end,
-                inside = function (self)
-                    while self.insideZone do
-                        Wait(2500)
-                        if self.insideZone then
-                            local ClosestVehicle = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
-                            if UpdateRadial then
-                                UpdateRadialMenu(garageName)
-                                UpdateRadial = false
-                            else
-                                if ClosestVehicle and not ParkingUpdated then
-                                    UpdateRadial = true
-                                    ParkingUpdated = true
-                                else
-                                    if ParkingUpdated and not ClosestVehicle then
-                                        ParkingUpdated = false
-                                        lib.removeRadialItem('park_vehicle')
-                                    end
-                                end
-                            end
-                        end
-                    end
                 end,
                 onExit = function()
                     ResetCurrentGarage()
-					RemoveRadialOptions()
+			RemoveRadialOptions()
                     lib.hideTextUI()
-                    UpdateRadial = true
                 end
             })
         end
@@ -1035,10 +1003,22 @@ CreateThread(function()
     end
 end)
 
-AddEventHandler('baseevents:enteredVehicle', function(vehicle)
-    UpdateRadial = true
-end)
-
-AddEventHandler('baseevents:leftVehicle', function(vehicle)
-    UpdateRadial = true
+lib.onCache('seat', function(value)
+    if value then 
+        if value == -1 then 
+            --im driving
+            if CurrentGarage then 
+                if GarageZones[CurrentGarage] then 
+                    if GarageZones[CurrentGarage]:contains(GetEntityCoords(PlayerPedId(), false)) then --in driver seat and inside a garage
+                        if IsAuthorizedToAccessGarage(CurrentGarage) then
+                            AddRadialParkingOption() --add parking button
+                        end
+                    end
+                end
+            end
+        else
+            --not driving (also triggered if switched seats)
+            lib.removeRadialItem('park_vehicle')
+        end
+    end
 end)
