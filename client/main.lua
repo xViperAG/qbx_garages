@@ -10,6 +10,7 @@ local VehicleClassMap = {}
 local config = require 'config.client'
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
+local ParkEnabled = false
 
 -- helper functions
 local function TableContains(tab, val)
@@ -57,7 +58,7 @@ local function GetClosestLocation(locations, loc)
     local closestDistance = -1
     local closestIndex = -1
     local closestLocation = nil
-    local plyCoords = loc or GetEntityCoords(cache.ped, 0)
+    local plyCoords = loc or GetEntityCoords(cache.ped)
     for i, v in ipairs(locations) do
         local location = vector3(v.x, v.y, v.z)
         local distance = #(plyCoords - location)
@@ -81,9 +82,9 @@ function SetAsMissionEntity(vehicle)
 end
 
 function GetVehicleByPlate(plate)
-    local vehicles = GetVehicles()
+    local vehicles = GetGamePool('CVehicle')
     for _, v in pairs(vehicles) do
-        if GetPlate(v) == plate then
+        if qbx.getVehiclePlate(v) == plate then
             return v
         end
     end
@@ -91,14 +92,9 @@ function GetVehicleByPlate(plate)
 end
 
 function RemoveRadialOptions()
-    if MenuItemId1 then
-        exports.qbx_radialmenu:RemoveOption(MenuItemId1)
-        MenuItemId1 = nil
-    end
-    if MenuItemId2 then
-        exports.qbx_radialmenu:RemoveOption(MenuItemId2)
-        MenuItemId2 = nil
-    end
+    lib.removeRadialItem('park_vehicle')
+    lib.removeRadialItem('open_garage')
+    lib.removeRadialItem('open_impound')
 end
 
 local function ResetCurrentGarage()
@@ -129,8 +125,8 @@ local function PublicGarage(garageName, type)
 
     if PlayerJob.type == 'leo' and GetResourceState('xt-pdextras') == 'started' then
         options[#options + 1] = {
-            title = 'Raid Garage',
-            description = 'Search for a citizen\'s vehicles',
+            title = locale('raid_garage'),
+            description = locale('raid_description'),
             icon = 'fas fa-magnifying-glass',
             event = 'xt-pdextras:client:raidGarage',
             args = {
@@ -195,6 +191,7 @@ local function ApplyVehicleDamage(currentVehicle, veh)
                 end
             end
         end
+
         if damage.windows then
             for k, window in pairs(damage.windows) do
                 if window.smashed then
@@ -222,25 +219,29 @@ local function GetCarDamage(vehicle)
         tyres = {},
         doors = {}
     }
+
     local tyreIndexes = { 0, 1, 2, 3, 4, 5, 45, 47 }
 
-    for _,i in pairs(tyreIndexes) do
+    for _, i in pairs(tyreIndexes) do
         damage.tyres[i] = {
             burst = IsVehicleTyreBurst(vehicle, i, false) == 1,
             onRim = IsVehicleTyreBurst(vehicle, i, true) == 1,
             health = GetTyreHealth(vehicle, i)
         }
     end
-    for i=0,7 do
+
+    for i = 0, 7 do
         damage.windows[i] = {
             smashed = not IsVehicleWindowIntact(vehicle, i)
         }
     end
-    for i=0,5 do
+
+    for i = 0, 5 do
         damage.doors[i] = {
             damaged = IsVehicleDoorDamaged(vehicle, i)
         }
     end
+
     return damage
 end
 
@@ -267,7 +268,6 @@ local function ExitAndDeleteVehicle(vehicle)
     local plate = GetVehicleNumberPlateText(vehicle)
     Wait(1500)
     DeleteVehicle(vehicle)
-    RemoveRadialOptions()
     Wait(1000)
     TriggerServerEvent('qb-garages:server:parkVehicle', plate)
 end
@@ -371,7 +371,7 @@ function ParkVehicleSpawnerVehicle(veh, garageName, vehLocation, plate)
 end
 
 local function ParkVehicle(veh, garageName, vehLocation)
-    local plate = GetPlate(veh)
+    local plate = qbx.getVehiclePlate(veh)
     local garageName = garageName or (CurrentGarage or CurrentHouseGarage)
     local garage = Garages[garageName]
     local garagetype = garage and garage.type or 'house'
@@ -388,103 +388,12 @@ local function ParkVehicle(veh, garageName, vehLocation)
     end
 end
 
-local function AddRadialParkingOption()
-    local veh, dist = GetClosestVehicle()
-    if (veh and dist <= config.VehicleParkDistance and config.AllowParkingFromOutsideVehicle) or IsPedInAnyVehicle(cache.ped, false) then
-        if MenuItemId1 then return end
-        MenuItemId1 = exports.qbx_radialmenu:AddOption({
-            id = 'put_up_vehicle',
-            title = 'Park Vehicle',
-            icon = 'square-parking',
-            type = 'client',
-            event = 'qb-garages:client:ParkVehicle',
-            shouldClose = true
-        }, MenuItemId1)
-    end
-	if not IsPedInAnyVehicle(cache.ped, false) then
-		if MenuItemId2 then return end
-		MenuItemId2 = exports.qbx_radialmenu:AddOption({
-			id = 'open_garage_menu',
-			title = 'Open Garage',
-			icon = 'warehouse',
-			type = 'client',
-			event = 'qb-garages:client:OpenMenu',
-			shouldClose = true
-		}, MenuItemId2)
-	end
-end
-
-local function AddRadialImpoundOption()
-	if MenuItemId1 then return end
-	MenuItemId1 = exports.qbx_radialmenu:AddOption({
-        id = 'open_garage_menu',
-        title = 'Open Impound Lot',
-        icon = 'warehouse',
-        type = 'client',
-        event = 'qb-garages:client:OpenMenu',
-        shouldClose = true
-    }, MenuItemId1)
-end
-
-local function UpdateRadialMenu(garagename)
-    CurrentGarage = garagename or CurrentGarage or nil
-    local garage = Garages[CurrentGarage]
-    if CurrentGarage and garage then
-        if garage.type == 'job' and (type(garage) == "table" or not IsStringNilOrEmpty(garage.job)) then
-            if IsAuthorizedToAccessGarage(CurrentGarage) then
-                AddRadialParkingOption()
-            end
-        elseif garage.type == 'gang' and not IsStringNilOrEmpty(garage.gang) then
-            if PlayerGang.name == garage.gang then
-                AddRadialParkingOption()
-            end
-        elseif garage.type == 'depot' then
-            AddRadialImpoundOption()
-        elseif IsAuthorizedToAccessGarage(CurrentGarage) then
-            AddRadialParkingOption()
-        end
-    elseif CurrentHouseGarage then
-        AddRadialParkingOption()
-    else
-        RemoveRadialOptions()
-    end
-end
-
-local function RegisterHousePoly(house)
-    if GaragePoly[house] then return end
-    local coords = HouseGarages[house].takeVehicle
-    if not coords or not coords.x then return end
-    local pos = vector3(coords.x, coords.y, coords.z)
-    GaragePoly[house] = lib.zones.box({
-        coords = pos,
-        size = vec3(7.5, 7.5, 5),
-        rotation = coords.h or coords.w,
-        debug = false,
-        onEnter = function()
-            CurrentHouseGarage = house
-            UpdateRadialMenu()
-            lib.showTextUI(Config.HouseParkingDrawText, { position = config.DrawTextPosition })
-        end,
-        onExit = function()
-            lib.hideTextUI()
-            RemoveRadialOptions()
-            CurrentHouseGarage = nil
-        end
-    })
-end
-
-local function RemoveHousePoly(house)
-    if not GaragePoly[house] then return end
-    GaragePoly[house]:remove()
-    GaragePoly[house] = nil
-end
-
 local function JobMenuGarage(garageName)
     local playerJob = PlayerJob.name
     local garage = Garages[garageName]
     local jobGarage = nil
 
-    if not type(garage.jobGarageIdentifier) == "table" then
+if type(garage.jobGarageIdentifier) ~= "table" then
         jobGarage = config.JobVehicles[garage.jobGarageIdentifier]
     else
         local identifiers = garage.jobGarageIdentifier
@@ -553,13 +462,116 @@ local function JobMenuGarage(garageName)
     lib.showContext('qbx_jobVehicle_Menu')
 end
 
+local function ParkVehicleRadial()
+    local curVeh = GetVehiclePedIsIn(cache.ped)
+    local canPark = true
+    if config.AllowParkingFromOutsideVehicle and curVeh == 0 then
+		local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
+		if closestVeh then curVeh = closestVeh end
+	else
+		canPark = GetPedInVehicleSeat(curVeh, -1) == cache.ped
+    end
+    Wait(200)
+    if not curVeh or not DoesEntityExist(curVeh) then return end
+    if curVeh ~= 0 and canPark then
+        ParkVehicle(curVeh)
+    end
+end
+
+local function OpenGarageMenu()
+    if CurrentGarage then
+        local garage = Garages[CurrentGarage]
+        local garageType = garage.type
+        if garageType == 'job' and garage.useVehicleSpawner then
+            JobMenuGarage(CurrentGarage)
+        else
+            PublicGarage(CurrentGarage, garageType)
+        end
+    elseif CurrentHouseGarage then
+        TriggerEvent('qb-garages:client:OpenHouseGarage')
+    end
+end
+
+local function AddRadialParkingOption()
+    lib.addRadialItem({
+        id = 'open_garage',
+        icon = 'warehouse',
+        label = locale('open_garage'),
+        onSelect = function()
+            OpenGarageMenu()
+        end
+    })
+end
+
+local function AddRadialImpoundOption()
+    lib.addRadialItem({
+        id = 'open_impound',
+        icon = 'warehouse',
+        label = locale('open_impound'),
+        onSelect = function()
+            OpenGarageMenu()
+        end,
+    })
+end
+
+local function UpdateRadialMenu(garagename)
+    CurrentGarage = garagename or CurrentGarage or nil
+    local garage = Garages[CurrentGarage]
+    if CurrentGarage and garage then
+        if garage.type == 'job' and (type(garage) == "table" or not IsStringNilOrEmpty(garage.job)) then
+            if IsAuthorizedToAccessGarage(CurrentGarage) then
+                AddRadialParkingOption()
+            end
+        elseif garage.type == 'gang' and not IsStringNilOrEmpty(garage.gang) then
+            if PlayerGang.name == garage.gang then
+                AddRadialParkingOption()
+            end
+        elseif garage.type == 'depot' then
+            AddRadialImpoundOption()
+        elseif IsAuthorizedToAccessGarage(CurrentGarage) then
+            AddRadialParkingOption()
+        end
+    elseif CurrentHouseGarage then
+        AddRadialParkingOption()
+    else
+        RemoveRadialOptions()
+    end
+end
+
+local function RegisterHousePoly(house)
+    if GaragePoly[house] then return end
+    local coords = HouseGarages[house].takeVehicle
+    if not coords or not coords.x then return end
+    local pos = vector3(coords.x, coords.y, coords.z)
+    GaragePoly[house] = lib.zones.box({
+        coords = pos,
+        size = vec3(7.5, 7.5, 5),
+        rotation = coords.h or coords.w,
+        debug = false,
+        onEnter = function()
+            CurrentHouseGarage = house
+            UpdateRadialMenu()
+            lib.showTextUI(Config.HouseParkingDrawText, { position = config.DrawTextPosition })
+        end,
+        onExit = function()
+            lib.hideTextUI()
+            RemoveRadialOptions()
+            CurrentHouseGarage = nil
+        end
+    })
+end
+
+local function RemoveHousePoly(house)
+    if not GaragePoly[house] then return end
+    GaragePoly[house]:remove()
+    GaragePoly[house] = nil
+end
+
 local function GetFreeParkingSpots(parkingSpots)
     local freeParkingSpots = {}
     for _, parkingSpot in ipairs(parkingSpots) do
-        local veh, distance = GetClosestVehicle(vector3(parkingSpot.x,parkingSpot.y, parkingSpot.z))
-        if not veh or distance >= 1.5 then
-            freeParkingSpots[#freeParkingSpots+1] = parkingSpot
-        end
+        local veh = lib.getClosestVehicle(vector3(parkingSpot.x,parkingSpot.y, parkingSpot.z), 1.5, false)
+        if not veh then freeParkingSpots[#freeParkingSpots+1] = parkingSpot end
     end
     return freeParkingSpots
 end
@@ -604,10 +616,10 @@ local function GetSpawnLocationAndHeading(garage, garageType, parkingSpots, vehi
                 elseif closestDistance >= spawnDistance then
                     return exports.qbx_core:Notify(locale("too_far_away"), "error", 4500)
                 else
-                    local veh, distance = GetClosestVehicle(vector3(location.x,location.y, location.z))
-                    if veh and distance <= 1.5 then
-                        return exports.qbx_core:Notify(locale("occupied"), "error", 4500)
-                    end
+                    local veh = lib.getClosestVehicle(vector3(location.x,location.y, location.z), 1.5, false)
+
+                    if veh then return exports.qbx_core:Notify(locale("occupied"), "error", 4500) end
+
                     heading = location.w
                 end
             end
@@ -664,13 +676,13 @@ end
 local function SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
     local garage = Garages[CurrentGarage]
     local jobGrade = QBX.PlayerData.job.grade.level
-    local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil)
+    local netId = lib.callback.await('qb-garages:server:SpawnVehicleSpawnerVehicle', false, vehicleModel, location, garage.WarpPlayerIntoVehicle or config.WarpPlayerIntoVehicle and garage.WarpPlayerIntoVehicle == nil, CurrentGarage)
     local veh = NetToVeh(netId)
     UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleConfig, cb)
 end
 
 function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
-    local plate = GetPlate(spawnedVehicle)
+    local plate = qbx.getVehiclePlate(spawnedVehicle)
     if garage.useVehicleSpawner then
         ClearMenu()
         if plate then
@@ -799,6 +811,9 @@ RegisterNetEvent('qb-garages:client:TakeOutGarage', function(data, cb)
     local parkingSpots = garage.ParkingSpots or {}
 
     local location, heading = GetSpawnLocationAndHeading(garage, garageType, parkingSpots, vehicle, spawnDistance)
+
+    -- if not location and not heading then return end (This was added into qb-garages, seems to be that it's finicky.)
+
     if garage.useVehicleSpawner then
         SpawnVehicleSpawnerVehicle(vehicleModel, vehicleConfig, location, heading, cb)
     else
@@ -810,38 +825,6 @@ RegisterNetEvent('qb-garages:client:TakeOutGarage', function(data, cb)
         end
         UpdateSpawnedVehicle(veh, vehicle, heading, garage)
         if cb then cb(veh) end
-    end
-end)
-
-RegisterNetEvent('qb-garages:client:OpenMenu', function()
-    if CurrentGarage then
-        local garage = Garages[CurrentGarage]
-        local garageType = garage.type
-        if garageType == 'job' and garage.useVehicleSpawner then
-            JobMenuGarage(CurrentGarage)
-        else
-            PublicGarage(CurrentGarage, garageType)
-        end
-    elseif CurrentHouseGarage then
-        TriggerEvent('qb-garages:client:OpenHouseGarage')
-    end
-end)
-
-RegisterNetEvent('qb-garages:client:ParkVehicle', function()
-    local curVeh = GetVehiclePedIsIn(cache.ped)
-    local canPark = true
-    if config.AllowParkingFromOutsideVehicle and curVeh == 0 then
-		local closestVeh, dist = GetClosestVehicle()
-		if dist <= config.VehicleParkDistance then
-            curVeh = closestVeh
-		end
-	else
-		canPark = GetPedInVehicleSeat(curVeh, -1) == cache.ped
-    end
-    Wait(200)
-    if not curVeh or not DoesEntityExist(curVeh) then return end
-    if curVeh ~= 0 and canPark then
-        ParkVehicle(curVeh)
     end
 end)
 
@@ -954,6 +937,7 @@ CreateThread(function()
     end
 end)
 
+
 CreateThread(function()
     for garageName, garage in pairs(Garages) do
         if (garage.type == 'public' or garage.type == 'depot' or garage.type == 'job' or garage.type == 'gang') then
@@ -977,13 +961,32 @@ CreateThread(function()
                     while self.insideZone do
                         Wait(2500)
                         if self.insideZone then
-                            UpdateRadialMenu(garageName)
+                            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
+                            if GetPedInVehicleSeat(cache.vehicle, -1) == cache.ped or (config.AllowParkingFromOutsideVehicle and closestVeh) then
+                                if not ParkEnabled then
+                                    lib.addRadialItem({
+                                        id = 'park_vehicle',
+                                        icon = 'square-parking',
+                                        label = locale('park_vehicle'),
+                                        onSelect = function()
+                                            ParkVehicleRadial()
+                                        end,
+                                    })
+                                    ParkEnabled = true
+                                end
+                            else
+                                if ParkEnabled then
+                                    lib.removeRadialItem('park_vehicle')
+                                    ParkEnabled = false
+                                end
+                            end
                         end
                     end
                 end,
                 onExit = function()
                     ResetCurrentGarage()
 					RemoveRadialOptions()
+                    ParkEnabled = false
                     lib.hideTextUI()
                 end
             })

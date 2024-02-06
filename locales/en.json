@@ -38,5 +38,10 @@
     "body": "Body",
     "out": "Out",
     "garaged": "Garaged",
-    "impound": "Impounded"
+    "impound": "Impounded",
+    "raid_garage": "Raid Garage",
+    "raid_description": "Search for a citizen's vehicles",
+
+    "park_vehicle": "Park Vehicle",
+    "open_garage": "Open Garage"
 }

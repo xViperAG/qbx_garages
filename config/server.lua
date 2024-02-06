@@ -3,6 +3,20 @@ return {
     RenewedKeys = false, -- EXPERIMENTAL --
     StoreParkinglotAccuratly = true,  -- store the last parking lot in the DB, if set to true, make sure to apply / run patch1.sql, I recommend applying the tracking snippet for qb-phone from the ReadMe to the phone so you can track the vehicle to the exact parking lot
 
+    addVehicleItems = false,
+
+    TrunkItems = {
+        police = {
+            { name = 'police_stormram', amount = 1, grade = 0 },
+            { name = 'heavyarmor', amount = 3,  grade = 0 },
+            { name = 'ammo-9', amount = 50,  grade = 0 },
+        },
+        ambulance = {
+            { name = 'WEAPON_FIREEXTINGUISHER', amount = 1, grade = 0 },
+            { name = 'bandages', amount = 5, grade = 0 }
+        }
+    },
+
     SharedHouseGarage = true,
 
     --Config.SharedGangGarages = false -- Allow shared gang garages, if false, the player can only access their own vehicles

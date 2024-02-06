@@ -29,13 +29,16 @@ lib.callback.register("qb-garage:server:GetOutsideVehicle", function(source, pla
     return result[1]
 end)
 
-lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, plate)
+lib.callback.register("qb-garages:server:GetVehicleLocation", function(_, plate)
     local vehicles = GetAllVehicles()
+
     for _, vehicle in pairs(vehicles) do
         local pl = GetVehicleNumberPlateText(vehicle)
-        if pl == plate then  return GetEntityCoords(vehicle) end
+        if pl == plate then return GetEntityCoords(vehicle) end
     end
+
     local result = MySQL.Sync.fetchAll('SELECT * FROM player_vehicles WHERE plate = ?', {plate})
+
     local veh = result[1]
     if not veh then return nil end
 
@@ -65,7 +68,7 @@ lib.callback.register("qb-garages:server:GetVehicleLocation", function(source, p
     return nil
 end)
 
-lib.callback.register("qb-garage:server:CheckSpawnedVehicle", function(source, plate)
+lib.callback.register("qb-garage:server:CheckSpawnedVehicle", function(_, plate)
     return VehicleSpawnerVehicles[plate]
 end)
 
@@ -79,17 +82,49 @@ RegisterNetEvent("qb-garage:server:UpdateSpawnedVehicle", function(plate, value)
     end
 end)
 
-lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(source, model, coords, warp)
-    local netId = SpawnVehicle(source, model, coords, warp)
-    if netId then return netId end
+local function addVehicleItems(source, plate)
+    local player = exports.qbx_core:GetPlayer(source)
+    local invId, invLabel = 'trunk' .. plate, 'Job Trunk'
+
+    Wait(500)
+
+    for k, v in pairs(svConfig.TrunkItems[player.PlayerData.job.name]) do
+        if player.PlayerData.job.grade >= v.grade then
+            exports.ox_inventory:AddItem(invId, v.name, v.amount)
+        end
+    end
+end
+
+lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(source, model, coords, warp, garage)
+    local netId = qbx.spawnVehicle({
+        model = model,
+        spawnSource = coords,
+        warp = warp
+    })
+    local veh = NetworkGetEntityFromNetworkId(netId)
+    local prefixPlate = Garages[garage].PlatePrefix..tostring(math.random(1000, 9999))
+
+    if not Garages[garage].PlatePrefix then Plate = qbx.getVehiclePlate(veh) else Plate = prefixPlate SetVehicleNumberPlateText(veh, Plate) end
+
+    if svConfig.addVehicleItems or Garages[garage].addVehicleItems then addVehicleItems(src, Plate) end
+
+    return netId
 end)
 
 lib.callback.register('qb-garage:server:spawnvehicle', function(source, vehInfo, coords, warp)
     local vehProps = {}
     local plate = vehInfo.plate
+
     local result = MySQL.query.await('SELECT mods FROM player_vehicles WHERE plate = ?', {plate})
     if result[1] then vehProps = json.decode(result[1].mods) end
-    local netId = SpawnVehicle(source, vehInfo.vehicle, coords, warp, vehProps)
+
+    local netId = qbx.spawnVehicle({
+        model = vehInfo.vehicle,
+        spawnSource = coords,
+        warp = warp,
+        props = vehProps
+    })
+
     local veh = NetworkGetEntityFromNetworkId(netId)
     if not veh or not NetworkGetNetworkIdFromEntity(veh) then
         print('Server:90 | ISSUE HERE', veh, NetworkGetNetworkIdFromEntity(veh))
@@ -232,48 +267,61 @@ lib.callback.register("qb-garage:server:checkOwnership", function(source, plate,
         if not svConfig.AllowParkingAnyonesVehicle then
             addSQLForAllowParkingAnyonesVehicle = " AND citizenid = '"..pData.PlayerData.citizenid.."' "
         end
-        local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ? ' .. addSQLForAllowParkingAnyonesVehicle,{plate})
+
+        local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ? ' .. addSQLForAllowParkingAnyonesVehicle, {plate})
         local fakeplate = MySQL.query.await('SELECT * FROM player_vehicles WHERE fakeplate = ?', {plate})
+
         return result[1] and true or fakeplate[1] and true or false
+
     elseif garageType == "house" then     --House garages only for player cars that have keys of the house
         local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ?', {plate})
         local fakeplate = MySQL.query.await('SELECT * FROM player_vehicles WHERE fakeplate = ?', {plate})
+
         return result[1] and true or fakeplate[1] and true or false
     elseif garageType == "gang" then        --Gang garages only for gang members cars (for sharing)
         local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ?', {plate})
         local fakeplate = MySQL.query.await('SELECT * FROM player_vehicles WHERE fakeplate = ?', {plate})
+
         if result[1] then
             --Check if found owner is part of the gang
             return exports.qbx_core:GetPlayer(source).PlayerData.gang.name == gang
         else
             return fakeplate[1] and true or false
         end
-    else                            --Job garages only for cars that are owned by someone (for sharing and service) or only by player depending of config
+    else --Job garages only for cars that are owned by someone (for sharing and service) or only by player depending of config
         local shared = ''
+
         if not TableContains(svConfig.SharedJobGarages, garage) then
             shared = " AND citizenid = '"..pData.PlayerData.citizenid.."'"
         end
+
         local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ?'..shared, {plate})
         local fakeplate = MySQL.query.await('SELECT * FROM player_vehicles WHERE fakeplate = ?'..shared, {plate})
+
         return result?[1] and true or fakeplate[1] and true or false
     end
 end)
 
 lib.callback.register("qb-garage:server:GetVehicleProperties", function(source, plate)
     local properties = {}
+
     local hasFakePlate = svConfig.BrazzersFakeplate and exports['brazzers-fakeplates']:getFakePlateFromPlate(plate)
     if hasFakePlate then plate = hasFakePlate end
+
     local result = MySQL.query.await('SELECT mods FROM player_vehicles WHERE plate = ?', {plate})
-    if result[1] then
-        properties = json.decode(result[1].mods)
-    end
+
+    if result[1] then properties = json.decode(result[1].mods) end
+
     return properties
 end)
 
 RegisterNetEvent('qb-garage:server:updateVehicle', function(state, fuel, engine, body, properties, plate, garage, location, damage)
     local hasFakePlate = svConfig.BrazzersFakeplate and exports['brazzers-fakeplates']:getPlateFromFakePlate(plate)
+
     if hasFakePlate then plate = hasFakePlate end
+
     Wait(100)
+
     if location and type(location) == 'vector3' then
         MySQL.update('UPDATE player_vehicles SET state = ?, garage = ?, fuel = ?, engine = ?, body = ?, mods = ?, parkingspot = ? WHERE plate = ?',{state, garage, fuel, engine, body, json.encode(properties), json.encode(location), plate})
     else
@@ -283,8 +331,11 @@ end)
 
 RegisterNetEvent('qb-garage:server:updateVehicleState', function(state, plate, garage)
     local hasFakePlate = svConfig.BrazzersFakeplate and exports['brazzers-fakeplates']:getPlateFromFakePlate(plate)
+
     if hasFakePlate then plate = hasFakePlate end
+
     Wait(100)
+
     MySQL.update('UPDATE player_vehicles SET state = ?, garage = ?, depotprice = ? WHERE plate = ?',{state, garage, 0, plate})
 end)
 
@@ -292,12 +343,14 @@ RegisterNetEvent('qb-garages:server:UpdateOutsideVehicles', function(Vehicles)
     local src = source
     local ply = exports.qbx_core:GetPlayer(src)
     local citizenId = ply.PlayerData.citizenid
+
     OutsideVehicles[citizenId] = Vehicles
 end)
 
 lib.callback.register("qb-garage:server:GetOutsideVehicles", function(source)
     local ply = exports.qbx_core:GetPlayer(source)
     local citizenId = ply.PlayerData.citizenid
+
     if OutsideVehicles[citizenId] and next(OutsideVehicles[citizenId]) then
         return OutsideVehicles[citizenId]
     else
@@ -322,6 +375,7 @@ RegisterNetEvent('qb-garage:server:PayDepotPrice', function(data)
     local vehicle = data.vehicle
 
     local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ?', {vehicle.plate})
+
     if result[1] then
         vehicle = result[1]
         local depotPrice = vehicle.depotprice ~= 0 and vehicle.depotprice or svConfig.DepotPrice
@@ -340,6 +394,7 @@ RegisterNetEvent('qb-garages:server:parkVehicle', function(source, plate)
     local vehicle = GetVehicleByPlate(plate)
     if vehicle then
         DeleteEntity(vehicle)
+
         if svConfig.RenewedKeys then
             exports.ox_inventory:RemoveItem(src, 'vehiclekey', 1, { plate = plate })
             exports['Renewed-Vehiclekeys']:removeKey(src, plate)
@@ -417,7 +472,6 @@ local function GetRandomPublicGarage()
     end
 end
 
-
 -- Command to restore lost cars (garage: 'None' or something similar)
 lib.addCommand("restorelostcars", {
     help = "Restores cars that were parked in a grage that no longer exists in the config or is invalid (name change or removed).",
@@ -449,3 +503,13 @@ lib.addCommand("restorelostcars", {
         end
     end
 end)
+
+AddEventHandler('baseevents:enteredVehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+    lib.removeRadialItem('open_garage')
+end)
+
+AddEventHandler('baseevents:leftVehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+end)
+
