@@ -335,10 +335,10 @@ local function ParkOwnedVehicle(veh, garageName, vehLocation, plate)
 
     local totalFuel = 0
 
-    if config.FuelScript == '' then
-        totalFuel = Entity(veh).state.fuel
-    elseif config.FuelScript then
+    if config.FuelScript ~= '' then
         totalFuel = exports[config.FuelScript]:GetFuel(veh)
+    else
+        totalFuel = Entity(veh).state.fuel
     end
 
     local canPark, closestLocation = CanParkVehicle(veh, garageName, vehLocation)
@@ -644,11 +644,11 @@ end
 
 local function UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleConf, cb)
     local plate = GetPlate(veh)
-        Entity(veh).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
-    if config.FuelScript == '' then
-        Entity(veh).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
-    elseif config.FuelScript then
-        exports[config.FuelScript]:SetFuel(veh, 100)
+
+    if config.FuelScript ~= '' then
+        exports[config.FuelScript]:SetFuel(spawnedVehicle, vehicleInfo.fuel)
+    else
+        Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
     end
     TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
 
@@ -689,10 +689,10 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
             OutsideVehicles[plate] = spawnedVehicle
             TriggerServerEvent('qb-garages:server:UpdateOutsideVehicles', OutsideVehicles)
         end
-        if config.FuelScript == '' then
-            Entity(spawnedVehicle).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
-        elseif config.FuelScript then
+        if config.FuelScript ~= '' then
             exports[config.FuelScript]:SetFuel(spawnedVehicle, 100)
+        else
+            Entity(spawnedVehicle).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
         TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
     else
@@ -700,10 +700,10 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
             OutsideVehicles[plate] = spawnedVehicle
             TriggerServerEvent('qb-garages:server:UpdateOutsideVehicles', OutsideVehicles)
         end
-        if config.FuelScript == '' then
-            Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
-        elseif config.FuelScript then
+        if config.FuelScript ~= '' then
             exports[config.FuelScript]:SetFuel(spawnedVehicle, vehicleInfo.fuel)
+        else
+            Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
         SetAsMissionEntity(spawnedVehicle)
         ApplyVehicleDamage(spawnedVehicle, vehicleInfo)
