@@ -134,7 +134,7 @@ lib.callback.register('qb-garage:server:spawnvehicle', function(source, vehInfo,
     local netId = NetworkGetNetworkIdFromEntity(veh)
     OutsideVehicles[plate] = {netID = netId, entity = veh}
 
-    SetVehicleNumberPlateText(veh, hasFakePlate)
+    SetVehicleNumberPlateText(veh, hasFakePlate or plate)
     if svConfig.RenewedKeys then
         exports['Renewed-Vehiclekeys']:addKey(source, hasFakePlate or plate)
     else
