@@ -553,6 +553,28 @@ local function RegisterHousePoly(house)
             UpdateRadialMenu()
             lib.showTextUI(Config.HouseParkingDrawText, { position = config.DrawTextPosition })
         end,
+        inside = function()
+            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
+            if GetPedInVehicleSeat(cache.vehicle, -1) == cache.ped or (config.AllowParkingFromOutsideVehicle and closestVeh) then
+                if not ParkEnabled then
+                    lib.addRadialItem({
+                        id = 'park_vehicle',
+                        icon = 'square-parking',
+                        label = locale('park_vehicle'),
+                        onSelect = function()
+                            ParkVehicleRadial()
+                        end,
+                    })
+                    ParkEnabled = true
+                end
+            else
+                if ParkEnabled then
+                    lib.removeRadialItem('park_vehicle')
+                    ParkEnabled = false
+                end
+            end
+            Wait(2500)
+        end,
         onExit = function()
             lib.hideTextUI()
             RemoveRadialOptions()
