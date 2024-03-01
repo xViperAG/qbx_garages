@@ -4,6 +4,7 @@ local OutsideVehicles = {}
 local VehicleSpawnerVehicles = {}
 
 local svConfig = require 'config.server'
+local renewedKeys = require 'config.shared'.RenewedKeys
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
 
@@ -75,7 +76,7 @@ end)
 RegisterNetEvent("qb-garage:server:UpdateSpawnedVehicle", function(plate, value)
     VehicleSpawnerVehicles[plate] = value
 
-    if svConfig.RenewedKeys then
+    if renewedKeys then
         exports['Renewed-Vehiclekeys']:addKey(source, plate)
     else
         exports.qbx_vehiclekeys:GiveKeys(source, plate)
@@ -135,7 +136,7 @@ lib.callback.register('qb-garage:server:spawnvehicle', function(source, vehInfo,
     OutsideVehicles[plate] = {netID = netId, entity = veh}
 
     SetVehicleNumberPlateText(veh, hasFakePlate or plate)
-    if svConfig.RenewedKeys then
+    if renewedKeys then
         exports['Renewed-Vehiclekeys']:addKey(source, hasFakePlate or plate)
     else
         exports.qbx_vehiclekeys:GiveKeys(source, hasFakePlate or plate)
@@ -395,7 +396,7 @@ RegisterNetEvent('qb-garages:server:parkVehicle', function(source, plate)
     if vehicle then
         DeleteEntity(vehicle)
 
-        if svConfig.RenewedKeys then
+        if renewedKeys then
             exports.ox_inventory:RemoveItem(src, 'vehiclekey', 1, { plate = plate })
             exports['Renewed-Vehiclekeys']:removeKey(src, plate)
         end

@@ -1,6 +1,5 @@
 return {
     BrazzersFakeplate = false,
-    RenewedKeys = false, -- EXPERIMENTAL --
     StoreParkinglotAccuratly = true,  -- store the last parking lot in the DB, if set to true, make sure to apply / run patch1.sql, I recommend applying the tracking snippet for qb-phone from the ReadMe to the phone so you can track the vehicle to the exact parking lot
 
     addVehicleItems = false,
