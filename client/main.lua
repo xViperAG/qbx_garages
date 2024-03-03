@@ -554,7 +554,7 @@ local function RegisterHousePoly(house)
             lib.showTextUI(Config.HouseParkingDrawText, { position = config.DrawTextPosition })
         end,
         inside = function()
-            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance)
+            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance, true)
             if GetPedInVehicleSeat(cache.vehicle, -1) == cache.ped or (config.AllowParkingFromOutsideVehicle and closestVeh) then
                 if not ParkEnabled then
                     lib.addRadialItem({
