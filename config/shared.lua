@@ -55,6 +55,8 @@
 return {
     Debug = true, -- To Debug the script
 
+    RenewedKeys = true, -- EXPERIMENTAL --
+
     HouseGarages = {}, -- DO NOT TOUCH!!
     Garages = {
         --[[

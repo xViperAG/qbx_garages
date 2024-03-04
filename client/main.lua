@@ -8,6 +8,7 @@ local MenuItemId1, MenuItemId2 = nil, nil
 local VehicleClassMap = {}
 
 local config = require 'config.client'
+local RenewedKeys = require 'config.shared'.RenewedKeys
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
 local ParkEnabled = false
@@ -708,7 +709,9 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
         SetAsMissionEntity(spawnedVehicle)
         ApplyVehicleDamage(spawnedVehicle, vehicleInfo)
         TriggerServerEvent('qb-garage:server:updateVehicleState', 0, vehicleInfo.plate, vehicleInfo.garage)
-        TriggerEvent("vehiclekeys:client:SetOwner", plate) -- There is really no other way to do this one since it's cliented...
+        if not RenewedKeys then
+            TriggerEvent("vehiclekeys:client:SetOwner", plate) -- There is really no other way to do this one since it's cliented...
+        end
     end
     SetEntityHeading(spawnedVehicle, heading)
     SetAsMissionEntity(spawnedVehicle)
