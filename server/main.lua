@@ -1,5 +1,3 @@
-lib.locale()
-
 local OutsideVehicles = {}
 local VehicleSpawnerVehicles = {}
 
@@ -504,13 +502,3 @@ lib.addCommand("restorelostcars", {
         end
     end
 end)
-
-AddEventHandler('baseevents:enteredVehicle', function(vehicle)
-    UpdateRadialMenu(CurrentGarage)
-    lib.removeRadialItem('open_garage')
-end)
-
-AddEventHandler('baseevents:leftVehicle', function(vehicle)
-    UpdateRadialMenu(CurrentGarage)
-end)
-

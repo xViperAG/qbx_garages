@@ -1,5 +1,3 @@
-lib.locale()
-
 local PlayerGang, PlayerJob = {}, {}
 local CurrentHouseGarage, CurrentGarage = nil, nil
 local OutsideVehicles = {}
@@ -212,38 +210,6 @@ local function ApplyVehicleDamage(currentVehicle, veh)
 
     SetVehicleEngineHealth(currentVehicle, engine)
     SetVehicleBodyHealth(currentVehicle, body)
-end
-
-local function GetCarDamage(vehicle)
-    local damage = {
-        windows = {},
-        tyres = {},
-        doors = {}
-    }
-
-    local tyreIndexes = { 0, 1, 2, 3, 4, 5, 45, 47 }
-
-    for _, i in pairs(tyreIndexes) do
-        damage.tyres[i] = {
-            burst = IsVehicleTyreBurst(vehicle, i, false) == 1,
-            onRim = IsVehicleTyreBurst(vehicle, i, true) == 1,
-            health = GetTyreHealth(vehicle, i)
-        }
-    end
-
-    for i = 0, 7 do
-        damage.windows[i] = {
-            smashed = not IsVehicleWindowIntact(vehicle, i)
-        }
-    end
-
-    for i = 0, 5 do
-        damage.doors[i] = {
-            damaged = IsVehicleDoorDamaged(vehicle, i)
-        }
-    end
-
-    return damage
 end
 
 local function Round(num, numDecimalPlaces)
@@ -537,6 +503,13 @@ local function UpdateRadialMenu(garagename)
         RemoveRadialOptions()
     end
 end
+
+lib.onCache('vehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+    if vehicle then
+        lib.removeRadialItem('open_garage')
+    end
+end)
 
 local function RegisterHousePoly(house)
     if GaragePoly[house] then return end
