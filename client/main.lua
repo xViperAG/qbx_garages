@@ -485,6 +485,10 @@ end
 local function UpdateRadialMenu(garagename)
     CurrentGarage = garagename or CurrentGarage or nil
     local garage = Garages[CurrentGarage]
+    if cache.vehicle then
+        lib.removeRadialItem('open_garage')
+        return
+    end
     if CurrentGarage and garage then
         if garage.type == 'job' and (type(garage) == "table" or not IsStringNilOrEmpty(garage.job)) then
             if IsAuthorizedToAccessGarage(CurrentGarage) then
@@ -506,11 +510,9 @@ local function UpdateRadialMenu(garagename)
     end
 end
 
-lib.onCache('vehicle', function(vehicle)
+lib.onCache('vehicle', function()
+    Wait(250)
     UpdateRadialMenu(CurrentGarage)
-    if vehicle then
-        lib.removeRadialItem('open_garage')
-    end
 end)
 
 local function RegisterHousePoly(house)
