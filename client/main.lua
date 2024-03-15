@@ -464,6 +464,7 @@ local function AddRadialParkingOption()
         icon = 'warehouse',
         label = locale('open_garage'),
         onSelect = function()
+            if cache.vehicle then return exports.qbx_core:Notify(locale('in_vehicle'), 'error') end
             OpenGarageMenu()
         end
     })
@@ -475,6 +476,7 @@ local function AddRadialImpoundOption()
         icon = 'warehouse',
         label = locale('open_impound'),
         onSelect = function()
+            if cache.vehicle then return exports.qbx_core:Notify(locale('in_vehicle'), 'error') end
             OpenGarageMenu()
         end,
     })
