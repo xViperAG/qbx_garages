@@ -1,5 +1,3 @@
-lib.locale()
-
 local PlayerGang, PlayerJob = {}, {}
 local CurrentHouseGarage, CurrentGarage = nil, nil
 local OutsideVehicles = {}
@@ -214,38 +212,6 @@ local function ApplyVehicleDamage(currentVehicle, veh)
     SetVehicleBodyHealth(currentVehicle, body)
 end
 
-local function GetCarDamage(vehicle)
-    local damage = {
-        windows = {},
-        tyres = {},
-        doors = {}
-    }
-
-    local tyreIndexes = { 0, 1, 2, 3, 4, 5, 45, 47 }
-
-    for _, i in pairs(tyreIndexes) do
-        damage.tyres[i] = {
-            burst = IsVehicleTyreBurst(vehicle, i, false) == 1,
-            onRim = IsVehicleTyreBurst(vehicle, i, true) == 1,
-            health = GetTyreHealth(vehicle, i)
-        }
-    end
-
-    for i = 0, 7 do
-        damage.windows[i] = {
-            smashed = not IsVehicleWindowIntact(vehicle, i)
-        }
-    end
-
-    for i = 0, 5 do
-        damage.doors[i] = {
-            damaged = IsVehicleDoorDamaged(vehicle, i)
-        }
-    end
-
-    return damage
-end
-
 local function Round(num, numDecimalPlaces)
     return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
 end
@@ -336,9 +302,9 @@ local function ParkOwnedVehicle(veh, garageName, vehLocation, plate)
 
     local totalFuel = 0
 
-    if config.FuelScript then
+    if config.FuelScript ~= '' then
         totalFuel = exports[config.FuelScript]:GetFuel(veh)
-    elseif config.FuelScript == '' then
+    else
         totalFuel = Entity(veh).state.fuel
     end
 
@@ -349,7 +315,6 @@ local function ParkOwnedVehicle(veh, garageName, vehLocation, plate)
     local properties = lib.getVehicleProperties(veh)
 
     if not properties then return end
-
     TriggerServerEvent('qb-garage:server:updateVehicle', 1, totalFuel, engineDamage, bodyDamage, properties, plate, garageName, config.StoreParkinglotAccuratly and closestVec3 or nil)
     ExitAndDeleteVehicle(veh)
     if plate then
@@ -499,6 +464,7 @@ local function AddRadialParkingOption()
         icon = 'warehouse',
         label = locale('open_garage'),
         onSelect = function()
+            if cache.vehicle then return exports.qbx_core:Notify(locale('in_vehicle'), 'error') end
             OpenGarageMenu()
         end
     })
@@ -510,6 +476,7 @@ local function AddRadialImpoundOption()
         icon = 'warehouse',
         label = locale('open_impound'),
         onSelect = function()
+            if cache.vehicle then return exports.qbx_core:Notify(locale('in_vehicle'), 'error') end
             OpenGarageMenu()
         end,
     })
@@ -538,6 +505,13 @@ local function UpdateRadialMenu(garagename)
         RemoveRadialOptions()
     end
 end
+
+lib.onCache('vehicle', function(vehicle)
+    UpdateRadialMenu(CurrentGarage)
+    if vehicle then
+        lib.removeRadialItem('open_garage')
+    end
+end)
 
 local function RegisterHousePoly(house)
     if GaragePoly[house] then return end
@@ -668,10 +642,11 @@ end
 
 local function UpdateVehicleSpawnerSpawnedVehicle(veh, garage, heading, vehicleConf, cb)
     local plate = GetPlate(veh)
-    if config.FuelScript then
-        exports[config.FuelScript]:SetFuel(veh, 100)
-    elseif config.FuelScript == '' then
-        Entity(veh).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
+
+    if config.FuelScript ~= '' then
+        exports[config.FuelScript]:SetFuel(spawnedVehicle, vehicleInfo.fuel)
+    else
+        Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
     end
     TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
 
@@ -712,9 +687,9 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
             OutsideVehicles[plate] = spawnedVehicle
             TriggerServerEvent('qb-garages:server:UpdateOutsideVehicles', OutsideVehicles)
         end
-        if config.FuelScript then
+        if config.FuelScript ~= '' then
             exports[config.FuelScript]:SetFuel(spawnedVehicle, 100)
-        elseif config.FuelScript == '' then
+        else
             Entity(spawnedVehicle).state.fuel = 100 -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
         TriggerServerEvent("qb-garage:server:UpdateSpawnedVehicle", plate, true)
@@ -723,9 +698,9 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
             OutsideVehicles[plate] = spawnedVehicle
             TriggerServerEvent('qb-garages:server:UpdateOutsideVehicles', OutsideVehicles)
         end
-        if config.FuelScript then
+        if config.FuelScript ~= '' then
             exports[config.FuelScript]:SetFuel(spawnedVehicle, vehicleInfo.fuel)
-        elseif config.FuelScript == '' then
+        else
             Entity(spawnedVehicle).state.fuel = vehicleInfo.fuel -- Don't change this. Change it in the  Defaults to ox fuel if not set in the config
         end
         SetAsMissionEntity(spawnedVehicle)

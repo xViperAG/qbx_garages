@@ -43,5 +43,7 @@
     "raid_description": "Search for a citizen's vehicles",
 
     "park_vehicle": "Park Vehicle",
-    "open_garage": "Open Garage"
+    "open_garage": "Open Garage",
+
+    "in_vehicle": "You're already in a vehicle"
 }
