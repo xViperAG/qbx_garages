@@ -8,6 +8,7 @@ local MenuItemId1, MenuItemId2 = nil, nil
 local VehicleClassMap = {}
 
 local config = require 'config.client'
+local RenewedKeys = require 'config.shared'.RenewedKeys
 local Garages = require 'config.shared'.Garages
 local HouseGarages = require 'config.shared'.HouseGarages
 local ParkEnabled = false
@@ -553,6 +554,28 @@ local function RegisterHousePoly(house)
             UpdateRadialMenu()
             lib.showTextUI(Config.HouseParkingDrawText, { position = config.DrawTextPosition })
         end,
+        inside = function()
+            local closestVeh = lib.getClosestVehicle(GetEntityCoords(cache.ped), config.VehicleParkDistance, true)
+            if GetPedInVehicleSeat(cache.vehicle, -1) == cache.ped or (config.AllowParkingFromOutsideVehicle and closestVeh) then
+                if not ParkEnabled then
+                    lib.addRadialItem({
+                        id = 'park_vehicle',
+                        icon = 'square-parking',
+                        label = locale('park_vehicle'),
+                        onSelect = function()
+                            ParkVehicleRadial()
+                        end,
+                    })
+                    ParkEnabled = true
+                end
+            else
+                if ParkEnabled then
+                    lib.removeRadialItem('park_vehicle')
+                    ParkEnabled = false
+                end
+            end
+            Wait(2500)
+        end,
         onExit = function()
             lib.hideTextUI()
             RemoveRadialOptions()
@@ -708,7 +731,9 @@ function UpdateSpawnedVehicle(spawnedVehicle, vehicleInfo, heading, garage)
         SetAsMissionEntity(spawnedVehicle)
         ApplyVehicleDamage(spawnedVehicle, vehicleInfo)
         TriggerServerEvent('qb-garage:server:updateVehicleState', 0, vehicleInfo.plate, vehicleInfo.garage)
-        TriggerEvent("vehiclekeys:client:SetOwner", plate) -- There is really no other way to do this one since it's cliented...
+        if not RenewedKeys then
+            TriggerEvent("vehiclekeys:client:SetOwner", plate) -- There is really no other way to do this one since it's cliented...
+        end
     end
     SetEntityHeading(spawnedVehicle, heading)
     SetAsMissionEntity(spawnedVehicle)
