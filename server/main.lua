@@ -87,7 +87,7 @@ local function addVehicleItems(source, plate)
 
     Wait(500)
 
-    for k, v in pairs(svConfig.TrunkItems[player.PlayerData.job.name]) do
+    for _, v in pairs(svConfig.TrunkItems[player.PlayerData.job.name]) do
         if player.PlayerData.job.grade >= v.grade then
             exports.ox_inventory:AddItem(invId, v.name, v.amount)
         end
@@ -100,12 +100,20 @@ lib.callback.register('qb-garages:server:SpawnVehicleSpawnerVehicle', function(s
         spawnSource = coords,
         warp = warp
     })
+
     local veh = NetworkGetEntityFromNetworkId(netId)
-    local prefixPlate = Garages[garage].PlatePrefix..tostring(math.random(1000, 9999))
 
-    if not Garages[garage].PlatePrefix then Plate = qbx.getVehiclePlate(veh) else Plate = prefixPlate SetVehicleNumberPlateText(veh, Plate) end
+    local prefixPlate = Garages[garage].platePrefix..tostring(math.random(1000, 9999))
 
-    if svConfig.addVehicleItems or Garages[garage].addVehicleItems then addVehicleItems(src, Plate) end
+    if not Garages[garage].platePrefix then
+        Plate = qbx.getVehiclePlate(veh)
+    else
+        Plate = prefixPlate
+    end
+
+    SetVehicleNumberPlateText(veh, Plate)
+
+    if Garages[garage].addVehicleItems then addVehicleItems(source, Plate) end
 
     return netId
 end)
