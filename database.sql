@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `player_vehicles` (
     `citizenid` varchar(50) DEFAULT NULL,
     `vehicle` varchar(50) DEFAULT NULL,
     `hash` varchar(50) DEFAULT NULL,
-    `mods` longtext DEFAULT NULL, -- I think this was added initally to fix jim-mechanic, but here's the refix (REMOVE THIS COMMENT WHEN IMPORTING)
+    `mods` longtext DEFAULT NULL, -- I think this was added initially to fix jim-mechanic, but here's the refix (REMOVE THIS COMMENT WHEN IMPORTING)
     `plate` varchar(15) NOT NULL,
     `fakeplate` varchar(50) DEFAULT NULL,
     `garage` varchar(50) DEFAULT NULL,
@@ -21,10 +21,3 @@ CREATE TABLE IF NOT EXISTS `player_vehicles` (
     KEY `citizenid` (`citizenid`),
     KEY `license` (`license`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1;
-
-ALTER TABLE `player_vehicles`
-ADD UNIQUE INDEX UK_playervehicles_plate (plate);
-
-ALTER TABLE `player_vehicles`
-ADD CONSTRAINT FK_playervehicles_players FOREIGN KEY (citizenid)
-REFERENCES `players` (citizenid) ON DELETE CASCADE ON UPDATE CASCADE;
